@@ -9,6 +9,7 @@ import Profile from './Pages/Profile';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Upload from './Pages/Upload';
+import Admin from './Pages/Admin';
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />
             <Route path='/upload' element={<Upload />} />
+            <Route path='/admin' element={<Admin />} />
           </Routes>
         </Router>
       </div>

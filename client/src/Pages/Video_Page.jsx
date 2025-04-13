@@ -85,7 +85,8 @@ const Video_Page = ({ SideBar }) => {
     axios.get("http://localhost:9999/api/getAllVideos")
       .then((res) => {
         const { data } = res.data;
-        setVideos(data);
+        const unblockedVideos = data.filter(video => !video.user.isBlocked);
+        setVideos(unblockedVideos);
       })
       .catch((err) => console.log(err));
   }, []);

@@ -25,7 +25,7 @@ exports.videoUpload = async (req, res) => {
 
 exports.getAllVideos = async (req, res) => {
     try {
-        const videos = await video.find().populate('user', 'userName channelName profilePic');
+        const videos = await video.find().populate('user', 'userName channelName profilePic isBlocked');
         res.status(200).json({ message: "Videos fetched successfully", success: "yes", data: videos });
     } catch (err) {
         console.log(err);

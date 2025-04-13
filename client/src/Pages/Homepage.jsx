@@ -24,11 +24,10 @@ const Homepage = ({ SideBar }) => {
   }, []);
 
  
-  const filteredVideos = search
-    ? videos.filter((video) =>
-        video.title.toLowerCase().includes(search.toLowerCase())
-      )
-    : videos;
+ const filteredVideos = videos.filter(video => 
+  !video.user?.isBlocked && 
+  (!search || video.title.toLowerCase().includes(search.toLowerCase()))
+);
 
   return (
     <div className="flex relative min-h-screen bg-black text-white overflow-hidden">

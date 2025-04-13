@@ -1,44 +1,49 @@
-const user = require('../Modals/user');
+const User = require('../Modals/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-
+// Cookie config
 const cookieOptions = {
-   
-    httpOnly: true,
-    secure: false, 
-    sameSite: 'lax' 
-}
+  httpOnly: true,
+  secure: false,
+  sameSite: 'lax'
+};
 
-
+// Signup
 exports.userSignup = async (req, res) => {
-    try {
-        const { channelName, userName, password, about, profilePic } = req.body;
-        const userexit = await user.findOne({ userName });
+  try {
+    const { channelName, userName, password, about, profilePic } = req.body;
+    const userExists = await User.findOne({ userName });
 
-        if (userexit) {
-            return res.status(400).json({ message: "User already exists" });
-        } else {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = new user({
-                channelName,
-                userName,
-                password: hashedPassword,
-                about,
-                profilePic
-            });
-            await newUser.save();
-            res.status(201).json({ message: "User created successfully", success: "yes", data: newUser });
-        }
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "Internal server error" });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
     }
-}
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      channelName,
+      userName,
+      password: hashedPassword,
+      about,
+      profilePic,
+      role: "user", // default role
+      isBlocked: false // default status
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: "User created successfully", success: "yes", data: newUser });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Signin
 exports.userSignin = async (req, res) => {
   try {
     const { userName, password } = req.body;
-    const userExist = await user.findOne({ userName });
+    const userExist = await User.findOne({ userName });
 
     if (!userExist) {
       return res.status(404).json({ message: "User not found" });
@@ -49,8 +54,7 @@ exports.userSignin = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: userExist._id }, 'secretkey'); 
-
+    const token = jwt.sign({ userId: userExist._id }, 'secretkey');
     res.cookie('token', token, cookieOptions);
 
     const cleanUser = {
@@ -58,7 +62,8 @@ exports.userSignin = async (req, res) => {
       userName: userExist.userName,
       channelName: userExist.channelName,
       about: userExist.about,
-      profilePic: userExist.profilePic
+      profilePic: userExist.profilePic,
+      role: userExist.role
     };
 
     res.status(200).json({
@@ -66,7 +71,7 @@ exports.userSignin = async (req, res) => {
       success: "yes",
       data: cleanUser,
       token: token,
-      user:cleanUser,
+      user: cleanUser
     });
 
   } catch (err) {
@@ -75,8 +80,35 @@ exports.userSignin = async (req, res) => {
   }
 };
 
+// Logout
 exports.userLogout = async (req, res) => {
   res.clearCookie('token', cookieOptions).json({
-      message: "User logged out successfully"
+    message: "User logged out successfully"
   });
+};
+
+// Block user (admin only)
+exports.blockUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: true });
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+    res.status(200).send({ message: "User blocked" });
+  } catch (err) {
+    res.status(500).json({ message: "Error blocking user" });
+  }
+};
+
+// Unblock user (admin only)
+exports.unblockUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: false });
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+    res.status(200).send({ message: "User unblocked" });
+  } catch (err) {
+    res.status(500).json({ message: "Error unblocking user" });
+  }
 };

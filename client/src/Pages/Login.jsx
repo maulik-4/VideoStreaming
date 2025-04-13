@@ -26,8 +26,11 @@ const Login = () => {
                 localStorage.setItem("user" , JSON.stringify(user));
                 
                 setTimeout(() => {
-                    navigate('/');
+                    window.location.href = '/';
+
                 }, 2000);
+                
+
                 toast.success("Login Successful");
             }else{
                 alert("Invalid Credentials");

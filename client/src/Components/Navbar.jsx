@@ -93,6 +93,8 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
       .get("http://localhost:9999/auth/logout")
       .then((res) => {
         console.log(res.data);
+        window.location.reload();
+
       })
       .catch((err) => {
         console.log(err);

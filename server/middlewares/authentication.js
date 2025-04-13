@@ -1,0 +1,21 @@
+const jwt = require('jsonwebtoken');
+const User = require('../Modals/user');
+
+const auth = async (req, res, next) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+        const decoded = jwt.verify(token, 'secretkey');
+        const user = await User.findById(decoded.userId);
+
+        if (!user) return res.status(401).json({ message: "Invalid token" });
+
+        req.user = user;
+        next();
+    } catch (err) {
+        res.status(401).json({ message: "Unauthorized" });
+    }
+};
+
+module.exports = auth;

@@ -25,7 +25,7 @@ const videoSchema = new mongoose.Schema({
         required: true,
         default: "All",
     },
-    like:{
+    likes:{
         type: Number,
         default: 0
     },
@@ -33,5 +33,9 @@ const videoSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    views: {
+        type: Number,
+        default: 0
+    }
 } , {timestamps : true});
 module.exports = mongoose.model('Video', videoSchema);

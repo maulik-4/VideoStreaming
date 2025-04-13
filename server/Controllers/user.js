@@ -65,7 +65,8 @@ exports.userSignin = async (req, res) => {
       message: "User logged in successfully",
       success: "yes",
       data: cleanUser,
-      token: token
+      token: token,
+      user:cleanUser,
     });
 
   } catch (err) {
@@ -74,9 +75,8 @@ exports.userSignin = async (req, res) => {
   }
 };
 
-
-exports.userLogout = async (req,res) =>{
-    res.clearcookie('token',cookieOptions).json({
-        message : "User logged out successfully"
-    })
-}
+exports.userLogout = async (req, res) => {
+  res.clearCookie('token', cookieOptions).json({
+      message: "User logged out successfully"
+  });
+};

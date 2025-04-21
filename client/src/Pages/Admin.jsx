@@ -9,7 +9,6 @@ function Admin() {
   const fetchUsers = async () => {
     try {
       const res = await axios.get('https://yotube-full-stack.onrender.com/auth/all-users', { withCredentials: true });
-     
       const token = localStorage.getItem('token');
       if(!token){
         toast.error("Please login as Admin  to access this page");

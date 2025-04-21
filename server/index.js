@@ -1,8 +1,8 @@
 const express = require('express');
-const cookieParser = require('cookie-parser'); // ✅ fixed spelling
+const cookieParser = require('cookie-parser'); 
 const app = express();
 const cors = require('cors');
-
+require('dotenv').config();
 
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -20,7 +20,9 @@ const video = require('./Routes/video');
 app.use('/auth', Authuser);
 app.use('/api', video);
 
-const port = 9999;
+
+const port = process.env.PORT || 9999;
+
 app.listen(port, () => {
     console.log("serverStarted");
 });

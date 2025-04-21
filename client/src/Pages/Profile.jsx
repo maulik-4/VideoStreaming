@@ -14,7 +14,7 @@ const Profile = ({ SideBar }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`http://localhost:9999/api/${id}/getAllVideosById`);
+        const res = await axios.get(`https://yotube-full-stack.onrender.com/api/${id}/getAllVideosById`);
         setUserVideos(res.data.data || []);
       } catch (error) {
         console.error('Failed to fetch user:', error);

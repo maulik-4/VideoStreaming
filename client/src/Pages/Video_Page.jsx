@@ -26,7 +26,7 @@ const Video_Page = ({ SideBar }) => {
 
   const HandleLikes = async () => {
     try {
-      const res = await axios.put(`http://localhost:9999/api/like/${id}`);
+      const res = await axios.put(`https://yotube-full-stack.onrender.com/api/like/${id}`);
       const token = localStorage.getItem('token');
       if(!token){
         toast.error("Please Login to like the video");
@@ -40,7 +40,7 @@ const Video_Page = ({ SideBar }) => {
   }
   const HandleDislike = async () => {
     try {
-      const res = await axios.put(`http://localhost:9999/api/dislike/${id}`);
+      const res = await axios.put(`https://yotube-full-stack.onrender.comapi/dislike/${id}`);
       const token = localStorage.getItem('token');
       if(!token){
         toast.error("Please Login to dislike the video");
@@ -55,7 +55,7 @@ const Video_Page = ({ SideBar }) => {
   }
   const HanldeShare = async()=>{
     try{
-      await navigator.clipboard.writeText(`http://localhost:5173/watch/${id}`);
+      await navigator.clipboard.writeText(`https://yotube-full-stack.onrender.com/watch/${id}`);
       toast.success("Link Copied to Clipboard") ;
     }
     catch(err){
@@ -64,7 +64,7 @@ const Video_Page = ({ SideBar }) => {
   }
   const HandleViews = async() =>{
     try{
-      const res =await axios.put(`http://localhost:9999/api/views/${id}`);
+      const res =await axios.put(`https://yotube-full-stack.onrender.com/api/views/${id}`);
       setviews(res.data.views);
     }
     catch(err){
@@ -73,7 +73,7 @@ const Video_Page = ({ SideBar }) => {
   }
 
   useEffect(() => {
-    axios.get(`http://localhost:9999/api/getAllVideos/${id}`)
+    axios.get(`https://yotube-full-stack.onrender.com/api/getAllVideos/${id}`)
       .then((res) => {
         const { data } = res.data;
         setvideo_Data(data);
@@ -86,7 +86,7 @@ const Video_Page = ({ SideBar }) => {
   
 
   useEffect(() => {
-    axios.get("http://localhost:9999/api/getAllVideos")
+    axios.get("https://yotube-full-stack.onrender.com/api/getAllVideos")
       .then((res) => {
         const { data } = res.data;
         const unblockedVideos = data.filter(video => !video.user.isBlocked);

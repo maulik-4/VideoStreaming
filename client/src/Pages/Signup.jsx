@@ -63,7 +63,7 @@ const Signup = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:9999/auth/signup", usersign);
+      const res = await axios.post("https://yotube-full-stack.onrender.com/auth/signup", usersign);
       console.log("✅ User signed up:", res.data);
       toast.success(res.data.message || "User signed up successfully!");
       navigate('/')

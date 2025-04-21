@@ -68,7 +68,7 @@
       }
     
       try {
-        const res = await axios.post("http://localhost:9999/api/upload", video, {
+        const res = await axios.post("https://yotube-full-stack.onrender.com/api/upload", video, {
           withCredentials: true,
         });
     

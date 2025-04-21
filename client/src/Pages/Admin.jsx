@@ -8,7 +8,7 @@ function Admin() {
    
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://localhost:9999/auth/all-users', { withCredentials: true });
+      const res = await axios.get('https://yotube-full-stack.onrender.com/auth/all-users', { withCredentials: true });
      
       const token = localStorage.getItem('token');
       if(!token){
@@ -28,7 +28,7 @@ function Admin() {
 
   const blockUser = async (id) => {
     try {
-      await axios.put(`http://localhost:9999/auth/block/${id}`, {}, { withCredentials: true });
+      await axios.put(`https://yotube-full-stack.onrender.com/auth/block/${id}`, {}, { withCredentials: true });
       fetchUsers();
       toast.success("User blocked successfully");
     } catch (err) {
@@ -38,7 +38,7 @@ function Admin() {
 
   const unblockUser = async (id) => {
     try {
-      await axios.put(`http://localhost:9999/auth/unblock/${id}`, {}, { withCredentials: true });
+      await axios.put(`https://yotube-full-stack.onrender.com/auth/unblock/${id}`, {}, { withCredentials: true });
       fetchUsers();
     } catch (err) {
       console.error("Error unblocking user:", err);

@@ -19,7 +19,7 @@ const Homepage = ({ SideBar }) => {
   ];
 
   useEffect(() => {
-    axios.get("http://localhost:9999/api/getAllVideos")
+    axios.get("https://yotube-full-stack.onrender.com/api/getAllVideos")
       .then((res) => {
         const { data } = res.data;
         setVideos(data);

@@ -92,7 +92,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     axios
-      .get("http://localhost:9999/auth/logout")
+      .get("https://yotube-full-stack.onrender.com/auth/logout")
       .then((res) => {
         console.log(res.data);
         window.location.reload();

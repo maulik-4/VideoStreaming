@@ -32,7 +32,7 @@ const Login = () => {
         localStorage.setItem("deviceId", deviceId);
         
         axios.post("https://yotube-full-stack.onrender.com/auth/login", 
-            { ...user, deviceId }, // Include device ID in request
+            { ...user, deviceId }, 
             { withCredentials: true }
         )
         .then((res) => {

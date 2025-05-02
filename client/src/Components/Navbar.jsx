@@ -172,14 +172,14 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
         {/* Right */}
         <div className="flex items-center gap-2 sm:gap-4">
           <div
-            className="flex items-center bg-gray-800 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+            className="hidden xs:flex items-center bg-gray-800 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
             onClick={() => navigate("/upload")}
           >
             <FaPlus size={14} />
             <span className="ml-1 hidden sm:inline text-sm">Create</span>
           </div>
           
-          <div className="relative group">
+          <div className="relative group hidden sm:block">
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full hidden group-hover:block"></div>
             <IoIosNotificationsOutline
               size={28}
@@ -193,6 +193,10 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
               onClick={() => setShowLogin(!showLogin)}
               className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all duration-300"
               alt="Profile"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpCKq1XnPYYDaUIlwlsvmLPZ-9-rdK28RToA&s";
+              }}
             />
             
             {showLogin && (

@@ -94,7 +94,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
     axios
       .get("https://yotube-full-stack.onrender.com/auth/logout")
       .then((res) => {
-        console.log(res.data);
+       
         window.location.reload();
 
       })

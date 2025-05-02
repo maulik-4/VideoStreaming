@@ -44,7 +44,7 @@ exports.userSignup = async (req, res) => {
 // Signin
 exports.userSignin = async (req, res) => {
   try {
-    const { userName, password } = req.body;
+    const { userName, password, deviceId } = req.body;
     const userExist = await User.findOne({ userName });
 
     if (!userExist) {
@@ -56,8 +56,18 @@ exports.userSignin = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: userExist._id }, SECRET_KEY, { expiresIn: '1h' });
-    res.cookie('token', token, cookieOptions);
+    // Include deviceId in the JWT payload
+    const token = jwt.sign(
+      { userId: userExist._id, deviceId }, 
+      SECRET_KEY, 
+      { expiresIn: '1h' }
+    );
+    
+    // Set cookie to expire with token (1 hour)
+    res.cookie('token', token, {
+      ...cookieOptions,
+      maxAge: 3600000 // 1 hour in milliseconds
+    });
 
     const cleanUser = {
       _id: userExist._id,
@@ -75,7 +85,6 @@ exports.userSignin = async (req, res) => {
       token: token,
       user: cleanUser
     });
-    console.log('JWT Secret Key:', SECRET_KEY);
 
   } catch (err) {
     console.error(err);

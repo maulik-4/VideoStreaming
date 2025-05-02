@@ -14,35 +14,39 @@ const Login = () => {
         })
     }
 
-    const handleLogin = async ()=>{
-        axios.post("https://yotube-full-stack.onrender.com/auth/login" , user,{
-            withCredentials: true,
-            
-        })
-        .then((res) =>{
+    const handleLogin = async () => {
+        // Generate a unique device ID
+        const deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        
+        // Store the device ID in localStorage
+        localStorage.setItem("deviceId", deviceId);
+        
+        axios.post("https://yotube-full-stack.onrender.com/auth/login", 
+            { ...user, deviceId }, // Include device ID in request
+            { withCredentials: true }
+        )
+        .then((res) => {
             if(res.data.success === "yes"){
                 const { user, token } = res.data;
-                localStorage.setItem("token" , token);
-                document.cookie = `token=${token}; path=/; max-age=86400`;
-                localStorage.setItem("user" , JSON.stringify(user));
+                localStorage.setItem("token", token);
+                document.cookie = `token=${token}; path=/; max-age=3600`; // Match JWT expiration (1 hour)
+                localStorage.setItem("user", JSON.stringify(user));
                 
                 setTimeout(() => {
                     window.location.href = '/';
-
                 }, 2000);
                 
-
                 toast.success("Login Successful");
-            }else{
+            } else {
                 alert("Invalid Credentials");
             }
         })
         .catch((err) => {
             console.log(err);
             toast.error("Invalid Credentials");
-        }
-        )
+        });
     }
+
     return (
         <div className="login bg-black text-white  flex justify-center items-center h-screen  ">
             <div className="login_box flex flex-col gap-10 w-[50vw] h-[60vh] py-[2vw]  border-gray-400 border-solid border-3 ">

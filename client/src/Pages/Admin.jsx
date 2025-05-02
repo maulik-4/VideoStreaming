@@ -8,39 +8,48 @@ function Admin() {
    
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://yotube-full-stack.onrender.com/auth/all-users', { withCredentials: true });
-      const token = localStorage.getItem('token');
-      if(!token){
-        toast.error("Please login as Admin  to access this page");
-        return;
-      }
+      // Don't send Authorization header, just use withCredentials to send cookies
+      const res = await axios.get('https://yotube-full-stack.onrender.com/auth/all-users', { 
+        withCredentials: true 
+      });
+      
       const Data = res.data.users;
       const reqData = Data.filter((user) => user.role !== "admin");
       setUsers(reqData);
     } catch (err) {
       console.error("Error fetching users:", err);
+      console.error("Response data:", err.response?.data);
+      console.error("Status:", err.response?.status);
+      toast.error("Failed to fetch users: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
-
+  console.log("Token:", localStorage.getItem('token'));
   const blockUser = async (id) => {
     try {
-      await axios.put(`https://yotube-full-stack.onrender.com/auth/block/${id}`, {}, { withCredentials: true });
+      await axios.put(`https://yotube-full-stack.onrender.com/auth/block/${id}`, {}, { 
+        withCredentials: true 
+      });
       fetchUsers();
       toast.success("User blocked successfully");
     } catch (err) {
       console.error("Error blocking user:", err);
+      toast.error("Failed to block user");
     }
   };
 
   const unblockUser = async (id) => {
     try {
-      await axios.put(`https://yotube-full-stack.onrender.com/auth/unblock/${id}`, {}, { withCredentials: true });
+      await axios.put(`https://yotube-full-stack.onrender.com/auth/unblock/${id}`, {}, { 
+        withCredentials: true 
+      });
       fetchUsers();
+      toast.success("User unblocked successfully");
     } catch (err) {
       console.error("Error unblocking user:", err);
+      toast.error("Failed to unblock user");
     }
   };
 

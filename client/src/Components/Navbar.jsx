@@ -113,41 +113,41 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
 
   return (
     <nav className="bg-gradient-to-r from-gray-900 to-black text-white sticky top-0 z-50 shadow-lg shadow-black/50 backdrop-blur-sm">
-      <div className="h-[60px] px-2 sm:px-4 md:px-6 lg:px-10 flex items-center justify-between max-w-[2000px] mx-auto">
-        {/* Left */}
-        <div className="flex items-center gap-2 sm:gap-4">
+      <div className="h-[60px] px-1 sm:px-4 md:px-6 lg:px-10 flex items-center justify-between max-w-[2000px] mx-auto">
+        {/* Left - Slightly smaller */}
+        <div className="flex items-center gap-1 sm:gap-4">
           <MdMenu 
-            size={28} 
+            size={24} 
             className="cursor-pointer p-1 hover:bg-gray-700 rounded-full transition-colors" 
             onClick={SidbarHidden} 
           />
           <div
             onClick={() => navigate("/")}
-            className="flex items-center gap-1 sm:gap-2 cursor-pointer group"
+            className="flex items-center gap-0 sm:gap-2 cursor-pointer group"
           >
-            <FaYoutube className="text-red-600 text-2xl sm:text-3xl group-hover:animate-pulse transition-all" />
-            <h1 className="text-base sm:text-xl font-bold tracking-tight group-hover:tracking-normal transition-all duration-300">YouTube</h1>
+            <FaYoutube className="text-red-600 text-xl sm:text-3xl group-hover:animate-pulse transition-all" />
+            <h1 className="text-sm sm:text-xl font-bold tracking-tight group-hover:tracking-normal transition-all duration-300">YouTube</h1>
           </div>
         </div>
 
-        {/* Middle */}
+        {/* Middle - Smaller on mobile */}
         <form 
           onSubmit={handleSearchSubmit}
-          className="flex items-center gap-2 w-full max-w-[200px] xs:max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] mx-2"
+          className="flex items-center gap-1 w-full max-w-[150px] xs:max-w-[250px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] mx-1 sm:mx-2"
         >
           <div className="relative w-full">
             <input
               type="text"
               value={search}
               onChange={handleSearchChange}
-              className="w-full px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-white outline-none border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40 transition-all duration-200 bg-gray-900/70 placeholder:text-gray-400 text-sm md:text-base"
+              className="w-full px-2 sm:px-5 py-1 sm:py-2 rounded-full text-white outline-none border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40 transition-all duration-200 bg-gray-900/70 placeholder:text-gray-400 text-xs md:text-base"
               placeholder="Search"
             />
             <button 
               type="submit"
-              className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-1.5 rounded-full hover:bg-gray-700 transition-colors"
+              className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-1 sm:p-1.5 rounded-full hover:bg-gray-700 transition-colors"
             >
-              <FaSearch size={16} />
+              <FaSearch size={12} className="sm:text-base" />
             </button>
           </div>
           <button
@@ -169,16 +169,18 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
           </button>
         </form>
 
-        {/* Right */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* Right section - BOTH CREATE AND PROFILE ALWAYS VISIBLE */}
+        <div className="flex items-center gap-0.5 xs:gap-2 sm:gap-4 ml-0.5 sm:ml-0">
+          {/* Create button - ALWAYS VISIBLE */}
           <div
-            className="flex items-center bg-gray-800 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+            className="flex items-center bg-gray-800 px-1 sm:px-3 py-1 sm:py-1.5 rounded-full cursor-pointer hover:bg-gray-700 transition-colors whitespace-nowrap"
             onClick={() => navigate("/upload")}
           >
-            <FaPlus size={14} />
-            <span className="ml-1 hidden sm:inline text-sm">Create</span>
+            <FaPlus size={10} className="sm:text-base" />
+            <span className="ml-1 hidden sm:!inline text-sm">Create</span>
           </div>
           
+          {/* Notifications (hidden on small screens) */}
           <div className="relative group hidden sm:block">
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full hidden group-hover:block"></div>
             <IoIosNotificationsOutline
@@ -187,11 +189,12 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
             />
           </div>
 
-          <div className="relative" ref={loginRef}>
+          {/* Profile - ALWAYS VISIBLE */}
+          <div className="relative flex" ref={loginRef}>
             <img
               src={imageUrl || profPic}
               onClick={() => setShowLogin(!showLogin)}
-              className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all duration-300"
+              className="w-7 h-7 sm:w-9 sm:h-9 object-cover rounded-full cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all duration-300"
               alt="Profile"
               onError={(e) => {
                 e.target.onerror = null;
@@ -199,8 +202,9 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
               }}
             />
             
+            {/* Dropdown remains the same */}
             {showLogin && (
-              <div className="absolute right-0 top-12 bg-gray-800/95 backdrop-blur-sm text-white rounded-xl shadow-xl w-48 flex flex-col z-50 border border-gray-700 overflow-hidden animate-fadeIn">
+              <div className="absolute right-0 top-10 sm:top-12 bg-gray-800/95 backdrop-blur-sm text-white rounded-xl shadow-xl w-48 flex flex-col z-50 border border-gray-700 overflow-hidden animate-fadeIn">
                 {token && (
                   <button
                     className="py-3 px-4 hover:bg-gray-700 transition-colors flex items-center gap-2 text-left"

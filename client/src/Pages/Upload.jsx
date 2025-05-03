@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaYoutube, FaCloudUploadAlt, FaImage, FaVideo } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -78,9 +78,7 @@ const Upload = () => {
     }
   
     try {
-      const res = await axios.post("https://yotube-full-stack.onrender.com/api/upload", video, {
-        withCredentials: true,
-      });
+      const res = await axiosInstance.post("/api/upload", video);
   
       toast.success("🎉 Video uploaded successfully!");
       setTimeout(() => navigate('/'), 1500);

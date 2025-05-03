@@ -172,7 +172,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
         {/* Right */}
         <div className="flex items-center gap-2 sm:gap-4">
           <div
-            className="hidden xs:flex items-center bg-gray-800 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+            className="flex items-center bg-gray-800 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
             onClick={() => navigate("/upload")}
           >
             <FaPlus size={14} />

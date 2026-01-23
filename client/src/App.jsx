@@ -12,6 +12,8 @@ import Upload from './Pages/Upload';
 import Admin from './Pages/Admin';
 import Subscriptions from './Pages/Subscriptions';
 import Footer from './Components/Footer';
+import Search from './Pages/Search';
+import YouTubePlayer from './Pages/YouTubePlayer';
 
 function App() {
   const [showSidebar, setShowSidebar] = useState(true);
@@ -27,9 +29,11 @@ function App() {
         <div className="content">
           <Routes>
             <Route path='/' element={<Homepage SideBar={showSidebar} />} />
+            <Route path='/search' element={<Search SideBar={showSidebar} />} />
             <Route path='/watch/:id' element={<Video_Page SideBar={showSidebar} />} />
             <Route path='/profile/:id' element={<Profile SideBar={showSidebar} />} />
             <Route path='/subscriptions' element={<Subscriptions SideBar={showSidebar} />} />
+            <Route path='/youtube/:videoId' element={<YouTubePlayer />} />
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />
             <Route path='/upload' element={<Upload />} />

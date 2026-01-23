@@ -1,5 +1,5 @@
 import { MdMenu } from "react-icons/md";
-import { FaYoutube, FaSearch, FaMicrophone, FaPlus } from "react-icons/fa";
+import { FaYoutube, FaSearch, FaMicrophone, FaPlus, FaSun, FaMoon } from "react-icons/fa";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { RiLogoutBoxRLine, RiUserLine } from "react-icons/ri";
 import { useState, useEffect, useRef } from "react";
@@ -15,6 +15,13 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
   const [showLogin, setShowLogin] = useState(false);
   const loginRef = useRef(null);
   const { imageUrl } = useCloudinary();
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("theme") || "dark";
+    } catch (e) {
+      return "dark";
+    }
+  });
   const [id, setid] = useState("");
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -51,6 +58,20 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
       }
     }
   }, []);
+
+  // Apply theme on mount / when changed
+  useEffect(() => {
+    try {
+      if (theme === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+      localStorage.setItem("theme", theme);
+    } catch (e) {
+      // ignore
+    }
+  }, [theme]);
 
   // Setup speech recognition
   useEffect(() => {
@@ -112,7 +133,14 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-gray-900 to-black text-white sticky top-0 z-50 shadow-lg shadow-black/50 backdrop-blur-sm">
+    <nav
+      className="sticky top-0 z-50 shadow-lg backdrop-blur-sm"
+      style={{
+        background: "linear-gradient(90deg, var(--card), rgba(0,0,0,0.08))",
+        color: "var(--text)",
+        borderBottom: "1px solid rgba(255,255,255,0.03)",
+      }}
+    >
       <div className="h-[60px] px-1 sm:px-4 md:px-6 lg:px-10 flex items-center justify-between max-w-[2000px] mx-auto">
         {/* Left - Slightly smaller */}
         <div className="flex items-center gap-1 sm:gap-4">
@@ -126,7 +154,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
             className="flex items-center gap-0 sm:gap-2 cursor-pointer group"
           >
             <FaYoutube className="text-red-600 text-xl sm:text-3xl group-hover:animate-pulse transition-all" />
-            <h1 className="text-sm sm:text-xl font-bold tracking-tight group-hover:tracking-normal transition-all duration-300">YouTube</h1>
+            <h1 className="text-sm sm:text-xl font-bold tracking-tight group-hover:tracking-normal transition-all duration-300">Vidmo</h1>
           </div>
         </div>
 
@@ -140,12 +168,12 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
               type="text"
               value={search}
               onChange={handleSearchChange}
-              className="w-full px-2 sm:px-5 py-1 sm:py-2 rounded-full text-white outline-none border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40 transition-all duration-200 bg-gray-900/70 placeholder:text-gray-400 text-xs md:text-base"
+              className="w-full px-2 sm:px-5 py-1 sm:py-2 rounded-full outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40 transition-all duration-200 input-card text-xs md:text-base"
               placeholder="Search"
             />
             <button 
               type="submit"
-              className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-1 sm:p-1.5 rounded-full hover:bg-gray-700 transition-colors"
+              className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 bg-card text-main p-1 sm:p-1.5 rounded-full hover:opacity-90 transition-colors"
             >
               <FaSearch size={12} className="sm:text-base" />
             </button>
@@ -162,7 +190,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
             className={`hidden sm:block p-2 rounded-full cursor-pointer transition-all duration-300 ${
               isListening 
                 ? "bg-blue-700 animate-pulse" 
-                : "bg-gray-800 hover:bg-gray-700"
+                : "bg-card hover:opacity-90"
             }`}
           >
             <FaMicrophone size={18} />
@@ -173,7 +201,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
         <div className="flex items-center gap-0.5 xs:gap-2 sm:gap-4 ml-0.5 sm:ml-0">
        
           <div
-            className="flex items-center bg-gray-800 px-1 sm:px-3 py-1 sm:py-1.5 rounded-full cursor-pointer hover:bg-gray-700 transition-colors whitespace-nowrap"
+            className="flex items-center bg-card px-1 sm:px-3 py-1 sm:py-1.5 rounded-full cursor-pointer hover:opacity-90 transition-colors whitespace-nowrap"
             onClick={() => navigate("/upload")}
           >
             <FaPlus size={10} className="sm:text-base" />
@@ -181,12 +209,23 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
           </div>
           
        
-          <div className="relative group hidden sm:block">
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full hidden group-hover:block"></div>
-            <IoIosNotificationsOutline
-              size={28}
-              className="bg-gray-800 p-1.5 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
-            />
+          <div className="relative flex items-center gap-2">
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
+              title="Toggle theme"
+              className="p-2 rounded-full flex items-center justify-center bg-card hover:opacity-90 transition-colors text-yellow-300"
+            >
+              {theme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />}
+            </button>
+
+            <div className="relative group hidden sm:block">
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full hidden group-hover:block"></div>
+              <IoIosNotificationsOutline
+                size={28}
+                className="bg-card p-1.5 rounded-full cursor-pointer hover:opacity-90 transition-colors"
+              />
+            </div>
           </div>
 
     
@@ -204,7 +243,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
             
          
             {showLogin && (
-              <div className="absolute right-0 top-10 sm:top-12 bg-gray-800/95 backdrop-blur-sm text-white rounded-xl shadow-xl w-48 flex flex-col z-50 border border-gray-700 overflow-hidden animate-fadeIn">
+              <div className="absolute right-0 top-10 sm:top-12 glass-card text-main rounded-xl shadow-xl w-48 flex flex-col z-50 border border-soft overflow-hidden animate-fadeIn" style={{padding:0}}>
                 {token && (
                   <button
                     className="py-3 px-4 hover:bg-gray-700 transition-colors flex items-center gap-2 text-left"

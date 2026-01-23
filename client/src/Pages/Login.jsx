@@ -61,8 +61,8 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex justify-center items-center px-4 py-8">
-            <div className="login-container w-full max-w-md bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-blue-900/20">
+            <div className="min-h-screen flex justify-center items-center px-4 py-8" style={{background:'var(--bg)', color:'var(--text)'}}>
+                <div className="login-container w-full max-w-md glass-card backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-xl">
                 <div className="p-8 md:p-10">
                     {/* Header */}
                     <div className="flex justify-center items-center gap-3 mb-10">
@@ -78,7 +78,7 @@ const Login = () => {
                                     type="text" 
                                     value={user.userName} 
                                     onChange={(e) => handleInput(e, "userName")}
-                                    className="w-full bg-gray-900/70 rounded-lg px-4 py-3 text-white placeholder-gray-400 outline-none border border-gray-700 focus:border-blue-500 transition-all duration-300"
+                                        className="w-full rounded-lg px-4 py-3 placeholder:text-muted outline-none border border-soft focus:border-blue-500 transition-all duration-300 input-card"
                                     placeholder="Username" 
                                 />
                             </div>
@@ -87,7 +87,7 @@ const Login = () => {
                                     type="password" 
                                     value={user.password} 
                                     onChange={(e) => handleInput(e, "password")}
-                                    className="w-full bg-gray-900/70 rounded-lg px-4 py-3 text-white placeholder-gray-400 outline-none border border-gray-700 focus:border-blue-500 transition-all duration-300"
+                                        className="w-full rounded-lg px-4 py-3 placeholder:text-muted outline-none border border-soft focus:border-blue-500 transition-all duration-300 input-card"
                                     placeholder="Password" 
                                 />
                             </div>
@@ -105,13 +105,13 @@ const Login = () => {
                             </button>
                             <button 
                                 onClick={() => navigate('/signup')}
-                                className="flex-1 bg-transparent hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300"
+                                className="flex-1 bg-transparent hover:opacity-90 text-main font-medium py-3 px-4 rounded-lg border border-soft transition-all duration-300"
                             >
                                 Sign Up
                             </button>
                             <button 
                                 onClick={() => navigate('/')}
-                                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300"
+                                className="flex-1 bg-card hover:opacity-90 text-main font-medium py-3 px-4 rounded-lg transition-all duration-300"
                             >
                                 Cancel
                             </button>

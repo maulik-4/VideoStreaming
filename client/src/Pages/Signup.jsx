@@ -78,106 +78,66 @@ const Signup = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black py-12 px-4">
+    <div className="flex items-center justify-center min-h-screen py-12 px-4" style={{background:'var(--bg)', color:'var(--text)'}}>
       <div className="w-full max-w-md">
         {/* Logo and title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-2">
             <FaYoutube className="text-red-600 text-4xl mr-2" />
-            <h1 className="text-2xl font-bold text-white">YouTube Clone</h1>
+            <h1 className="text-2xl font-bold text-main">YouTube Clone</h1>
           </div>
-          <p className="text-gray-400">Create your account to start sharing videos</p>
+          <p className="text-muted">Create your account to start sharing videos</p>
         </div>
         
         {/* Form container */}
-        <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl shadow-xl border border-gray-700/50 overflow-hidden">
+        <div className="glass-card backdrop-blur-sm rounded-xl shadow-xl border border-soft overflow-hidden">
           <div className="p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-white text-center mb-6">Sign Up</h2>
+            <h2 className="text-xl font-bold text-main text-center mb-6">Sign Up</h2>
             
             <form className="space-y-5" onSubmit={handleSignUp}>
               {/* Username input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <FaUser className="mr-2 text-gray-400" />
+                <label className="text-sm font-medium text-muted flex items-center">
+                  <FaUser className="mr-2 text-muted" />
                   Username
                 </label>
-                <input
-                  type="text"
-                  name="userName"
-                  value={usersign.userName}
-                  onChange={(e) => handleSignin(e, "userName")}
-                  placeholder="Enter your username"
-                  className="w-full p-3 bg-gray-900/70 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700"
-                  required
-                />
+                <input type="text" name="userName" value={usersign.userName} onChange={(e) => handleSignin(e, "userName")} placeholder="Enter your username" className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-soft input-card" required />
               </div>
               
               {/* Email input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <FaEnvelope className="mr-2 text-gray-400" />
+                <label className="text-sm font-medium text-muted flex items-center">
+                  <FaEnvelope className="mr-2 text-muted" />
                   Email
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={usersign.email}
-                  onChange={(e) => handleSignin(e, "email")}
-                  placeholder="Enter your email address"
-                  className="w-full p-3 bg-gray-900/70 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700"
-                  required
-                />
+                <input type="email" name="email" value={usersign.email} onChange={(e) => handleSignin(e, "email")} placeholder="Enter your email address" className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-soft input-card" required />
               </div>
               
               {/* Password input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <FaLock className="mr-2 text-gray-400" />
+                <label className="text-sm font-medium text-muted flex items-center">
+                  <FaLock className="mr-2 text-muted" />
                   Password
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={usersign.password}
-                  onChange={(e) => handleSignin(e, "password")}
-                  placeholder="Create a password"
-                  className="w-full p-3 bg-gray-900/70 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700"
-                  required
-                />
+                <input type="password" name="password" value={usersign.password} onChange={(e) => handleSignin(e, "password")} placeholder="Create a password" className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-soft input-card" required />
               </div>
               
               {/* Channel name input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <FaYoutube className="mr-2 text-gray-400" />
+                <label className="text-sm font-medium text-muted flex items-center">
+                  <FaYoutube className="mr-2 text-muted" />
                   Channel Name
                 </label>
-                <input
-                  type="text"
-                  name="channelName"
-                  value={usersign.channelName}
-                  onChange={(e) => handleSignin(e, "channelName")}
-                  placeholder="Name your channel"
-                  className="w-full p-3 bg-gray-900/70 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700"
-                  required
-                />
+                <input type="text" name="channelName" value={usersign.channelName} onChange={(e) => handleSignin(e, "channelName")} placeholder="Name your channel" className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-soft input-card" required />
               </div>
               
               {/* About input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <FaInfoCircle className="mr-2 text-gray-400" />
+                <label className="text-sm font-medium text-muted flex items-center">
+                  <FaInfoCircle className="mr-2 text-muted" />
                   About
                 </label>
-                <textarea
-                  name="about"
-                  value={usersign.about}
-                  onChange={(e) => handleSignin(e, "about")}
-                  placeholder="Tell viewers about your channel..."
-                  className="w-full p-3 bg-gray-900/70 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 resize-none"
-                  rows={3}
-                  required
-                />
+                <textarea name="about" value={usersign.about} onChange={(e) => handleSignin(e, "about")} placeholder="Tell viewers about your channel..." className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-soft resize-none input-card" rows={3} required />
               </div>
               
               {/* Profile picture upload */}
@@ -188,7 +148,7 @@ const Signup = () => {
                 </label>
                 
                 <div className="flex items-center justify-center">
-                  <label className="w-full flex flex-col items-center px-4 py-6 bg-gray-900/70 text-white rounded-lg shadow-lg tracking-wide border border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors">
+                  <label className="w-full flex flex-col items-center px-4 py-6 rounded-lg shadow-lg tracking-wide border border-soft cursor-pointer hover:opacity-90 input-card">
                     <svg className="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                       <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
                     </svg>
@@ -219,15 +179,7 @@ const Signup = () => {
               </div>
               
               {/* Submit button */}
-              <button
-                type="submit"
-                disabled={!usersign.profilePic || uploading}
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                  usersign.profilePic && !uploading
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-gray-700 text-gray-300 cursor-not-allowed"
-                }`}
-              >
+              <button type="submit" disabled={!usersign.profilePic || uploading} className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${usersign.profilePic && !uploading ? "bg-red-600 hover:bg-red-700 text-white" : "bg-card text-muted cursor-not-allowed"}`}>
                 {uploading ? "Uploading..." : "Create Account"}
               </button>
               

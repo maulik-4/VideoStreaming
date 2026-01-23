@@ -7,15 +7,11 @@ const Profile = ({ SideBar }) => {
   const [userVideos, setUserVideos] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // Safely get user from localStorage
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
-  
-  // Only access role if user exists
   const role = user?.role;
-  
-  const userInfo = userVideos.length > 0 ? userVideos[0].user : null;
-  
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -29,37 +25,36 @@ const Profile = ({ SideBar }) => {
     fetchUser();
   }, [id]);
 
-  // Only navigate if role is admin
   useEffect(() => {
-    if (role === "admin") {
+    if (role === 'admin') {
       navigate('/admin');
     }
   }, [role, navigate]);
 
+  const userInfo = userVideos.length > 0 ? userVideos[0].user : null;
+
   return (
-    <div className="bg-gradient-to-b from-gray-900 to-black flex w-full min-h-screen text-white flex-col md:flex-row">
+    <div className="flex w-full min-h-screen flex-col md:flex-row" style={{background:'var(--bg)', color:'var(--text)'}}>
       {SideBar && <Sidebar SideBar={SideBar} />}
 
       <div className="flex flex-col w-full px-6 md:px-12 py-8">
         {/* User Info */}
         {userInfo && (
-          <div className="user_info flex items-center gap-4 bg-gray-800/30 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-gray-700/50">
+          <div className="user_info flex items-center gap-4 glass-card p-6 rounded-xl shadow-lg" style={{border:'1px solid rgba(255,255,255,0.03)'}}>
             <img
               src={userInfo.profilePic}
-              className="w-20 h-20 rounded-full object-cover border-2 border-gray-700/50"
+              className="w-20 h-20 rounded-full object-cover"
               alt={userInfo.userName}
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "https://via.placeholder.com/150";
+                e.target.src = 'https://via.placeholder.com/150';
               }}
             />
             <div className="info text-lg">
               <h1 className="font-bold text-xl md:text-2xl">{userInfo.userName}</h1>
-              <h1 className="text-gray-400 text-lg md:text-xl">@{userInfo.channelName}</h1>
-              {userInfo.role === "admin" && (
-                <span className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full mt-2 inline-block">
-                  Admin
-                </span>
+              <h1 className="text-muted text-lg md:text-xl">@{userInfo.channelName}</h1>
+              {userInfo.role === 'admin' && (
+                <span className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full mt-2 inline-block">Admin</span>
               )}
             </div>
           </div>
@@ -73,10 +68,10 @@ const Profile = ({ SideBar }) => {
               <div
                 onClick={() => navigate(`/watch/${video._id}`)}
                 key={index}
-                className="video_card bg-gray-800/20 backdrop-blur-sm p-4 rounded-xl shadow-lg hover:bg-gray-800/40 transition-all duration-300 cursor-pointer"
+                className="video_card p-4 rounded-xl shadow-lg transition-all duration-300 cursor-pointer glass-card"
               >
                 <div
-                  className="video_thumbnail w-full h-40 bg-gray-900 rounded-lg mb-3 overflow-hidden"
+                  className="video_thumbnail w-full h-40 rounded-lg mb-3 overflow-hidden"
                   style={{
                     backgroundImage: `url(${video.thumbnail})`,
                     backgroundSize: 'cover',
@@ -84,8 +79,8 @@ const Profile = ({ SideBar }) => {
                   }}
                 ></div>
                 <h1 className="text-lg font-semibold line-clamp-1">{video.title}</h1>
-                <h1 className="text-gray-400 text-sm">{video.user.userName}</h1>
-                <div className="flex justify-between text-gray-400 text-sm mt-2">
+                <h1 className="text-muted text-sm">{video.user.userName}</h1>
+                <div className="flex justify-between text-muted text-sm mt-2">
                   <span>👁️ {video.views || 0}</span>
                   <span>❤️ {video.likes || 0}</span>
                 </div>
@@ -93,15 +88,13 @@ const Profile = ({ SideBar }) => {
             ))
           ) : (
             <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-20 h-20 text-gray-600 mb-4">
+              <div className="w-20 h-20 text-muted mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">No videos found</h3>
-              <p className="text-gray-400 max-w-md">
-                This channel hasn't uploaded any videos yet.
-              </p>
+              <p className="text-muted max-w-md">This channel hasn't uploaded any videos yet.</p>
             </div>
           )}
         </div>

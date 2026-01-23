@@ -40,8 +40,8 @@ const VideoCard = ({ video, navigate }) => {
   
     return (
       <div
-        onClick={() => navigate(`/watch/${_id}`, { state: { video } })}
-        className="flex flex-col bg-gray-800/30 rounded-lg overflow-hidden hover:bg-gray-800/60 transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/20 cursor-pointer"
+          onClick={() => navigate(`/watch/${_id}`, { state: { video } })}
+          className="flex flex-col rounded-lg overflow-hidden transition-all duration-300 cursor-pointer glass-card hover:shadow-2xl hover:scale-[1.01]"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
@@ -49,7 +49,7 @@ const VideoCard = ({ video, navigate }) => {
           <img
             src={thumbnail}
             alt={title}
-            className={`absolute top-0 left-0 w-full h-full object-cover ${isHovering ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+              className={`absolute top-0 left-0 w-full h-full object-cover ${isHovering ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             loading="lazy"
           />
           <video
@@ -58,19 +58,20 @@ const VideoCard = ({ video, navigate }) => {
             muted
             playsInline
             loop
-            className={`absolute top-0 left-0 w-full h-full object-cover ${isHovering ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+              className={`absolute top-0 left-0 w-full h-full object-cover ${isHovering ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
             onLoadedData={(e) => {
               if (isHovering) {
                 e.target.play().catch(() => {});
               }
             }}
           />
-          <div className="absolute bottom-2 right-2 bg-black/70 text-xs font-medium px-2 py-1 rounded">
-            {formatViews(views)} views
-          </div>
-          <div className="absolute bottom-2 left-2 bg-blue-600 text-xs font-medium px-2 py-1 rounded">
-            {category}
-          </div>
+            <div className="absolute bottom-3 right-3 text-[11px] font-medium px-2 py-1 rounded-lg glass-card" style={{border:'1px solid rgba(255,255,255,0.04)'}}>
+              {formatViews(views)} views
+            </div>
+            <div className="absolute bottom-3 left-3 text-[11px] font-semibold px-2 py-1 rounded-lg" style={{background:'linear-gradient(90deg,var(--accent),var(--accent-2))', color:'#fff'}}>
+              {category}
+            </div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent opacity-30 pointer-events-none"></div>
         </div>
   
         <div className="p-3">
@@ -78,16 +79,16 @@ const VideoCard = ({ video, navigate }) => {
             <img
               src={user?.profilePic || "https://via.placeholder.com/40"}
               alt={user?.channelName || "Channel"}
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-1 ring-white/5"
             />
             <div className="flex-1 min-w-0">
-              <h3 className="text-white font-medium line-clamp-2 text-sm leading-tight mb-1">
+              <h3 className="font-medium line-clamp-2 text-sm leading-tight mb-1" style={{color:'var(--text)'}}>
                 {title}
               </h3>
-              <p className="text-gray-300 text-xs mb-1 truncate">
+              <p className="text-gray-300 text-xs mb-1 truncate" style={{color:'var(--muted)'}}>
                 {user?.channelName || "Unknown Channel"}
               </p>
-              <p className="text-gray-400 text-xs">
+              <p className="text-gray-400 text-xs" style={{color:'var(--muted)'}}>
                 {formattedDate}
               </p>
             </div>

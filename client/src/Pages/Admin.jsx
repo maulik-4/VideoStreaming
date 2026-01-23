@@ -64,15 +64,15 @@ function Admin() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="p-6 text-white min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
+    <div className="p-6 min-h-screen" style={{background:'var(--bg)', color:'var(--text)'}}>
     <h1 className="text-3xl font-extrabold mb-6 text-blue-400 tracking-wide">
       Admin Dashboard
     </h1>
-  
+
     <div className="overflow-x-auto rounded-xl shadow-lg">
-      <table className="min-w-full text-sm bg-gray-800 rounded-xl overflow-hidden">
+      <table className="min-w-full text-sm glass-card rounded-xl overflow-hidden">
         <thead>
-          <tr className="bg-blue-600 text-white uppercase text-xs tracking-wider">
+          <tr className="bg-blue-600 text-main uppercase text-xs tracking-wider">
             <th className="px-6 py-4 text-left">Username</th>
             <th className="px-6 py-4 text-left">Channel Name</th>
             <th className="px-6 py-4 text-left">Role</th>
@@ -80,15 +80,15 @@ function Admin() {
             <th className="px-6 py-4 text-left">Action</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-700">
+        <tbody className="divide-y" style={{borderColor:'rgba(255,255,255,0.04)'}}>
           {users.map((user) => (
             <tr
               key={user._id}
-              className="hover:bg-gray-700 transition duration-200 ease-in-out"
+              className="transition duration-200 ease-in-out hover:translate-x-0.5"
             >
-              <td className="px-6 py-4">{user.userName}</td>
-              <td className="px-6 py-4">{user.channelName}</td>
-              <td className="px-6 py-4 capitalize">{user.role}</td>
+              <td className="px-6 py-4 text-main">{user.userName}</td>
+              <td className="px-6 py-4 text-muted">{user.channelName}</td>
+              <td className="px-6 py-4 capitalize text-muted">{user.role}</td>
               <td className="px-6 py-4">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -124,10 +124,10 @@ function Admin() {
         </tbody>
       </table>
     </div>
-  
+
     <ToastContainer position="top-right" theme="dark" />
   </div>
-  
+
   );
 }
 

@@ -1,3 +1,71 @@
-body{
-    background: #000;
+:root{
+    --bg: #0b0f1a;
+    --card: #0f1724;
+    --muted: #94a3b8;
+    --accent: #7c3aed;
+    --accent-2: #ef4444;
+    --text: #e6eef8;
+    --glass: rgba(255,255,255,0.04);
 }
+
+.light{
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --muted: #475569;
+    --accent: #6d28d9;
+    --accent-2: #ef4444;
+    --text: #0f1724;
+    --glass: rgba(15,23,36,0.04);
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%;}
+body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, var(--bg) 0%, rgba(7,10,16,0.9) 100%);
+    color: var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    transition: background-color 250ms ease, color 250ms ease;
+}
+
+.glass-card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.04);
+    backdrop-filter: blur(6px);
+}
+
+.accent-btn{
+    background: linear-gradient(90deg,var(--accent),var(--accent-2));
+    color: white;
+}
+
+/* small utility for subtle entrance */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.animate-fadeIn{animation:fadeInUp .28s ease both}
+
+/* Light-mode overrides for commonly-used Tailwind utility classes so the app adapts
+    without changing every component. These are intentionally minimal and safe. */
+.light .bg-gray-800{background-color:var(--card) !important;border:1px solid rgba(15,23,36,0.04) !important}
+.light .bg-gray-900{background-color:var(--card) !important}
+.light .text-white{color:var(--text) !important}
+.light .border-gray-700{border-color:rgba(15,23,36,0.06) !important}
+.light .placeholder\:text-gray-400::placeholder{color:var(--muted) !important}
+
+/* Theme-aware utility classes */
+.bg-card{background:var(--card)}
+.text-main{color:var(--text)}
+.text-muted{color:var(--muted)}
+.border-soft{border-color:rgba(255,255,255,0.04)}
+.input-card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--text);
+}
+.input-card::placeholder{color:var(--muted);}
+
+/* shimmer background (adapts to theme) */
+.bg-shimmer{background:linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.035) 50%, rgba(255,255,255,0.02) 100%)}
+.light .bg-shimmer{background:linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.04) 100%)}
+

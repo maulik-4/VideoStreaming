@@ -105,7 +105,7 @@ const Video_Page = ({ SideBar }) => {
   };
 
   return (
-    <div className="flex  bg-gradient-to-b from-gray-900 to-black text-white min-h-screen w-full  md:flex-row flex-col">
+    <div className="flex min-h-screen w-full md:flex-row flex-col" style={{background:'var(--bg)', color:'var(--text)'}}>
       {/* Pass the SideBar prop to the Sidebar component */}
       {SideBar && <Sidebar SideBar={SideBar} />}
       <ToastContainer position="top-right" autoClose={1000} theme="dark" />
@@ -116,7 +116,7 @@ const Video_Page = ({ SideBar }) => {
           {/* Video section */}
           <div className="w-full md:w-[70%]">
             {/* Video player */}
-            <div className="relative bg-gray-900 w-full rounded-xl mb-4 overflow-hidden shadow-lg shadow-black/30">
+            <div className="relative w-full rounded-xl mb-4 overflow-hidden shadow-lg" style={{background:'var(--card)'}}>
               <video
                 src={videoLink}
                 controls
@@ -126,7 +126,7 @@ const Video_Page = ({ SideBar }) => {
             </div>
 
             {/* Video info */}
-            <div className="bg-gray-800/20 backdrop-blur-sm shadow-lg p-4 rounded-xl mb-6">
+            <div className="backdrop-blur-sm shadow-lg p-4 rounded-xl mb-6 glass-card">
               <h1 className="font-bold text-xl md:text-2xl mb-3">{title}</h1>
               
               <div className="flex items-center text-gray-400 text-sm mb-4">
@@ -143,21 +143,21 @@ const Video_Page = ({ SideBar }) => {
                 >
                   <img
                     src={profilePic}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
+                    className="w-12 h-12 rounded-full object-cover"
                     alt="Channel"
                   />
                   <div>
                     <h2 className="font-bold text-base md:text-lg">{channelName}</h2>
-                    <p className="text-xs text-gray-400">{video_Data?.user?.subscribers || 0} subscribers</p>
+                    <p className="text-xs text-muted">{video_Data?.user?.subscribers || 0} subscribers</p>
                   </div>
-                  <button className="ml-2 bg-gray-800 hover:bg-gray-700 px-4 py-1.5 rounded-full flex items-center gap-2 text-sm transition-colors">
+                  <button className="ml-2 px-4 py-1.5 rounded-full flex items-center gap-2 text-sm transition-colors bg-card hover:opacity-90 hidden sm:flex">
                     <IoIosNotificationsOutline size={18} />
                     <span>Subscribe</span>
                   </button>
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  <div className="flex bg-gray-800/80 hover:bg-gray-700/80 transition-colors rounded-full overflow-hidden">
+                  <div className="flex rounded-full overflow-hidden bg-card/80">
                     <button 
                       onClick={HandleLikes} 
                       className="px-4 py-2 flex items-center gap-1.5 hover:bg-blue-500/10 transition-colors border-r border-gray-700/50"
@@ -174,17 +174,12 @@ const Video_Page = ({ SideBar }) => {
                     </button>
                   </div>
                   
-                  <button 
-                    onClick={HanldeShare} 
-                    className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 px-4 py-2 rounded-full text-sm transition-colors"
-                  >
+                  <button onClick={HanldeShare} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors bg-card hover:opacity-90">
                     <IoMdShareAlt size={18} />
                     <span>Share</span>
                   </button>
                   
-                  <button 
-                    className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 px-4 py-2 rounded-full text-sm transition-colors"
-                  >
+                  <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors bg-card hover:opacity-90">
                     <RiDownloadLine size={18} />
                     <span>Download</span>
                   </button>
@@ -192,8 +187,8 @@ const Video_Page = ({ SideBar }) => {
               </div>
 
               {/* Description */}
-              <div className="mt-4 bg-gray-800/30 p-4 rounded-lg">
-                <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">
+              <div className="mt-4 p-4 rounded-lg glass-card">
+                <p className="text-muted text-sm leading-relaxed whitespace-pre-line">
                   {description}
                 </p>
               </div>
@@ -201,13 +196,13 @@ const Video_Page = ({ SideBar }) => {
           </div>
 
           {/* Suggested videos section */}
-          <div className="w-full md:w-[30%]">
+            <div className="w-full md:w-[30%]">
             <h2 className="text-lg font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Suggested Videos</h2>
             <div className="flex flex-col gap-4">
               {videos.map((video) => (
                 <div 
                   key={video._id} 
-                  className="bg-gray-800/20 hover:bg-gray-800/40 transition-colors duration-300 rounded-lg overflow-hidden shadow-md cursor-pointer"
+                  className="transition-colors duration-300 rounded-lg overflow-hidden shadow-md cursor-pointer glass-card"
                   onClick={() => navigate(`/watch/${video._id}`)}
                 >
                   <div className="flex flex-col">
@@ -219,8 +214,8 @@ const Video_Page = ({ SideBar }) => {
                     />
                     <div className="p-3">
                       <h3 className="font-medium text-sm line-clamp-2">{video.title}</h3>
-                      <p className="text-gray-400 text-xs mt-1">{video.user?.channelName}</p>
-                      <div className="flex items-center text-gray-500 text-xs mt-1">
+                      <p className="text-muted text-xs mt-1">{video.user?.channelName}</p>
+                      <div className="flex items-center text-muted text-xs mt-1">
                         <span>{video.views} views</span>
                         <BsDot className="mx-1" />
                         <span>{formatDate(video.createdAt)}</span>

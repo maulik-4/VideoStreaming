@@ -93,7 +93,7 @@ const Upload = () => {
   const isFormComplete = video.title && video.description && video.category && video.thumbnail && video.videoLink;
 
   return (
-    <div className='min-h-screen w-full bg-gradient-to-b from-gray-900 to-black text-white pt-[70px] pb-8 px-4'>
+    <div className='min-h-screen w-full pt-[70px] pb-8 px-4' style={{background:'var(--bg)', color:'var(--text)'}}>
       <ToastContainer position="top-center" theme="dark" />
       
       <div className="max-w-4xl mx-auto">
@@ -105,41 +105,25 @@ const Upload = () => {
           </h1>
         </div>
         
-        <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-gray-700/50">
+        <div className="glass-card backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-soft">
           {/* Main Form */}
           <div className="p-6 md:p-8">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
               {/* Left Column - Form Fields */}
               <div className="md:col-span-3 space-y-6">
                 <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-300">Video Title</label>
-                  <input
-                    type="text"
-                    value={video.title}
-                    onChange={(e) => handleInput(e, "title")}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-900/70 text-white placeholder-gray-400 outline-none border border-gray-700 focus:border-blue-500 transition-all duration-300"
-                    placeholder="My Awesome Video"
-                  />
+                  <label className="block text-sm font-medium text-muted">Video Title</label>
+                  <input type="text" value={video.title} onChange={(e) => handleInput(e, "title")} className="w-full px-4 py-3 rounded-lg input-card placeholder:text-muted outline-none border border-soft focus:border-blue-500 transition-all duration-300" placeholder="My Awesome Video" />
                 </div>
                 
                 <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-300">Description</label>
-                  <textarea
-                    value={video.description}
-                    onChange={(e) => handleInput(e, "description")}
-                    rows="4"
-                    className="w-full px-4 py-3 rounded-lg bg-gray-900/70 text-white placeholder-gray-400 outline-none border border-gray-700 focus:border-blue-500 transition-all duration-300"
-                    placeholder="Describe your video..."
-                  ></textarea>
+                  <label className="block text-sm font-medium text-muted">Description</label>
+                  <textarea value={video.description} onChange={(e) => handleInput(e, "description")} rows="4" className="w-full px-4 py-3 rounded-lg input-card placeholder:text-muted outline-none border border-soft focus:border-blue-500 transition-all duration-300" placeholder="Describe your video..."></textarea>
                 </div>
                 
                 <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-300">Category</label>
-                  <select
-                    value={video.category}
-                    onChange={(e) => handleInput(e, "category")}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-900/70 text-white outline-none border border-gray-700 focus:border-blue-500 transition-all duration-300"
-                  >
+                  <label className="block text-sm font-medium text-muted">Category</label>
+                  <select value={video.category} onChange={(e) => handleInput(e, "category")} className="w-full px-4 py-3 rounded-lg input-card outline-none border border-soft focus:border-blue-500 transition-all duration-300">
                     <option value="" disabled>Select a category</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -149,16 +133,12 @@ const Upload = () => {
                 
                 <div className="space-y-6 pt-4">
                   <div className="space-y-4">
-                    <label className="block text-sm font-medium text-gray-300">Thumbnail</label>
+                    <label className="block text-sm font-medium text-muted">Thumbnail</label>
                     <div className="flex items-center">
-                      <label className="flex items-center justify-center gap-2 py-3 px-5 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer transition-colors w-full">
+                      <label className="flex items-center justify-center gap-2 py-3 px-5 rounded-lg cursor-pointer transition-colors w-full input-card">
                         <FaImage className="text-blue-400" />
                         <span className="text-sm">Choose Thumbnail</span>
-                        <input
-                          type="file"
-                          onChange={(e) => handleUpload(e, "thumbnail")}
-                          className="hidden"
-                        />
+                        <input type="file" onChange={(e) => handleUpload(e, "thumbnail")} className="hidden" />
                       </label>
                     </div>
                     {loading.thumbnail && (
@@ -170,16 +150,12 @@ const Upload = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    <label className="block text-sm font-medium text-gray-300">Video File</label>
+                    <label className="block text-sm font-medium text-muted">Video File</label>
                     <div className="flex items-center">
-                      <label className="flex items-center justify-center gap-2 py-3 px-5 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer transition-colors w-full">
+                      <label className="flex items-center justify-center gap-2 py-3 px-5 rounded-lg cursor-pointer transition-colors w-full input-card">
                         <FaVideo className="text-red-400" />
                         <span className="text-sm">Choose Video</span>
-                        <input
-                          type="file"
-                          onChange={(e) => handleUpload(e, "videoLink")}
-                          className="hidden"
-                        />
+                        <input type="file" onChange={(e) => handleUpload(e, "videoLink")} className="hidden" />
                       </label>
                     </div>
                     {loading.video && (
@@ -194,48 +170,48 @@ const Upload = () => {
               
               {/* Right Column - Previews */}
               <div className="md:col-span-2 space-y-6">
-                <div className="bg-gray-850 rounded-lg p-4 border border-gray-700/50">
-                  <h3 className="text-center text-sm font-medium mb-3 text-gray-300">Preview</h3>
+                <div className="rounded-lg p-4 border border-soft glass-card">
+                  <h3 className="text-center text-sm font-medium mb-3 text-muted">Preview</h3>
                   
                   {video.thumbnail ? (
-                    <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-700/50 mb-4">
+                    <div className="relative aspect-video rounded-lg overflow-hidden border border-soft mb-4 glass-card">
                       <img
                         src={video.thumbnail}
                         alt="Thumbnail Preview"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute bottom-2 right-2 bg-black/70 text-xs font-medium px-2 py-1 rounded">
+                      <div className="absolute bottom-2 right-2 text-xs font-medium px-2 py-1 rounded glass-card" style={{border:'1px solid rgba(255,255,255,0.04)'}}>
                         Thumbnail
                       </div>
                     </div>
                   ) : (
-                    <div className="aspect-video flex items-center justify-center bg-gray-800/70 rounded-lg mb-4 border border-dashed border-gray-600">
+                    <div className="aspect-video flex items-center justify-center rounded-lg mb-4 border border-dashed border-soft glass-card">
                       <div className="text-center px-4">
                         <FaImage className="mx-auto text-gray-500 text-3xl mb-2" />
-                        <p className="text-xs text-gray-400">Thumbnail preview will appear here</p>
+                        <p className="text-xs text-muted">Thumbnail preview will appear here</p>
                       </div>
                     </div>
                   )}
                   
                   {video.videoLink ? (
-                    <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-700/50">
+                    <div className="relative aspect-video rounded-lg overflow-hidden border border-soft glass-card">
                       <video controls className="w-full h-full object-cover">
                         <source src={video.videoLink} type="video/mp4" />
                         Your browser does not support the video tag.
                       </video>
                     </div>
                   ) : (
-                    <div className="aspect-video flex items-center justify-center bg-gray-800/70 rounded-lg border border-dashed border-gray-600">
+                    <div className="aspect-video flex items-center justify-center rounded-lg border border-dashed border-soft glass-card">
                       <div className="text-center px-4">
                         <FaVideo className="mx-auto text-gray-500 text-3xl mb-2" />
-                        <p className="text-xs text-gray-400">Video preview will appear here</p>
+                        <p className="text-xs text-muted">Video preview will appear here</p>
                       </div>
                     </div>
                   )}
                 </div>
                 
-                <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-700/50">
-                  <div className="text-xs text-gray-400 space-y-2 mb-4">
+                <div className="rounded-lg p-4 border border-soft glass-card">
+                  <div className="text-xs text-muted space-y-2 mb-4">
                     <p>• Videos must be under 100MB</p>
                     <p>• You can upload MP4, MOV, or WebM formats</p>
                     <p>• Thumbnails should be 16:9 ratio</p>
@@ -247,20 +223,9 @@ const Upload = () => {
           </div>
           
           {/* Bottom Actions */}
-          <div className="px-8 py-6 bg-gray-900/50 border-t border-gray-700/50 flex flex-col sm:flex-row justify-end gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className="px-5 py-2.5 rounded-lg font-medium hover:bg-gray-700 border border-gray-600 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={!isFormComplete}
-              className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${
-                isFormComplete ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-700 cursor-not-allowed opacity-60"
-              }`}
-            >
+          <div className="px-8 py-6 border-t border-soft flex flex-col sm:flex-row justify-end gap-4 glass-card">
+            <button onClick={() => navigate('/')} className="px-5 py-2.5 rounded-lg font-medium border border-soft text-main transition-colors">Cancel</button>
+            <button onClick={handleSubmit} disabled={!isFormComplete} className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${isFormComplete ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-card text-muted cursor-not-allowed'}`}>
               <FaCloudUploadAlt className="text-lg" />
               Upload Video
             </button>

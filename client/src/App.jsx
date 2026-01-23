@@ -14,6 +14,7 @@ import Subscriptions from './Pages/Subscriptions';
 import Footer from './Components/Footer';
 import Search from './Pages/Search';
 import YouTubePlayer from './Pages/YouTubePlayer';
+import History from './Pages/History';
 
 function App() {
   const [showSidebar, setShowSidebar] = useState(true);
@@ -33,6 +34,7 @@ function App() {
             <Route path='/watch/:id' element={<Video_Page SideBar={showSidebar} />} />
             <Route path='/profile/:id' element={<Profile SideBar={showSidebar} />} />
             <Route path='/subscriptions' element={<Subscriptions SideBar={showSidebar} />} />
+            <Route path='/history' element={<History SideBar={showSidebar} />} />
             <Route path='/youtube/:videoId' element={<YouTubePlayer />} />
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />

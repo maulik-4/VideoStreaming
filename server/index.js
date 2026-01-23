@@ -29,9 +29,11 @@ class Server {
   setupRoutes() {
     const authRoutes = require('./Routes/user');
     const videoRoutes = require('./Routes/video');
+    const historyRoutes = require('./Routes/history');
     
     this.app.use('/auth', authRoutes);
     this.app.use('/api', videoRoutes);
+    this.app.use('/history', historyRoutes);
   }
 
   start() {

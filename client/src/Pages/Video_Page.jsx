@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Sidebar from '../Components/Sidebar/Sidebar';
 import { IoIosNotificationsOutline, IoMdShareAlt } from 'react-icons/io';
 import { AiFillLike, AiFillDislike } from 'react-icons/ai';
@@ -8,6 +8,7 @@ import axios from 'axios';
 import axiosInstance from '../utils/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
+import historyTracker from '../utils/historyTracker';
 
 const Video_Page = ({ SideBar }) => {
   const { id } = useParams();
@@ -29,6 +30,12 @@ const Video_Page = ({ SideBar }) => {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+
+  // History tracking refs
+  const videoRef = useRef(null);
+  const historyTrackerRef = useRef(null);
+  const [resumeTime, setResumeTime] = useState(0);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
 
   // All the handler functions remain the same
   const HandleLikes = async () => {
@@ -92,6 +99,9 @@ const Video_Page = ({ SideBar }) => {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         setSubscribed((currentUser.subscriptions || []).includes(data.user?._id));
         HandleViews();
+        
+        // Load resume time from history
+        loadResumeTime(id);
       })
       .catch((err) => console.log(err));
   }, [id]);
@@ -176,6 +186,51 @@ const Video_Page = ({ SideBar }) => {
     }
   };
 
+  // Load resume time from history
+  const loadResumeTime = async (videoId) => {
+    const history = await historyTracker.getVideoHistory(videoId, 'local');
+    if (history && history.progress > 5 && history.watchPercentage < 95) {
+      setResumeTime(history.progress);
+      setShowResumePrompt(true);
+    }
+  };
+
+  // Handle video time update (track progress)
+  const handleVideoTimeUpdate = () => {
+    if (!videoRef.current || !video_Data) return;
+    
+    const currentTime = videoRef.current.currentTime;
+    const duration = videoRef.current.duration;
+    
+    if (currentTime > 5) { // Only track after 5 seconds
+      historyTracker.trackProgress({
+        videoId: id,
+        platform: 'local',
+        progress: currentTime,
+        duration: duration,
+        title: video_Data.title,
+        thumbnail: video_Data.thumbnail,
+        channelName: video_Data.user?.channelName || 'Unknown'
+      });
+    }
+  };
+
+  // Handle resume playback
+  const handleResumeClick = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = resumeTime;
+      videoRef.current.play();
+      setShowResumePrompt(false);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      historyTracker.flush();
+    };
+  }, []);
+
   // Format date function
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -200,11 +255,45 @@ const Video_Page = ({ SideBar }) => {
             {/* Video player */}
             <div className="relative w-full rounded-xl mb-4 overflow-hidden shadow-lg" style={{background:'var(--card)'}}>
               <video
+                ref={videoRef}
                 src={videoLink}
                 controls
                 className="w-full md:h-[500px] h-[240px] object-cover rounded-xl"
                 poster={video_Data?.thumbnail}
+                onTimeUpdate={handleVideoTimeUpdate}
+                onLoadedMetadata={() => {
+                  // Auto-resume if there's a saved position
+                  if (resumeTime > 5 && videoRef.current && !showResumePrompt) {
+                    videoRef.current.currentTime = resumeTime;
+                  }
+                }}
               />
+              
+              {/* Resume playback prompt */}
+              {showResumePrompt && (
+                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm">
+                    <h3 className="text-lg font-semibold mb-2">Resume playback?</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Pick up where you left off at {Math.floor(resumeTime / 60)}:{Math.floor(resumeTime % 60).toString().padStart(2, '0')}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleResumeClick}
+                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                      >
+                        Resume
+                      </button>
+                      <button
+                        onClick={() => setShowResumePrompt(false)}
+                        className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        Start Over
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Video info */}

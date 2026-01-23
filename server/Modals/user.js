@@ -30,5 +30,14 @@ const userSchema  = new mongoose.Schema({
         type: Boolean,
         default: false
       }
+            ,
+            subscriptions: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }],
+            subscribersCount: {
+                type: Number,
+                default: 0
+            }
 }, {timestamps : true});
 module.exports = mongoose.model('User', userSchema);

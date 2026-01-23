@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 import { FaHome, FaHistory, FaClock, FaThumbsUp, FaFire, FaMusic, FaGamepad, FaNewspaper, FaRunning } from "react-icons/fa";
 import { SiYoutubeshorts } from "react-icons/si";
 import { MdOutlineSubscriptions, MdVideoLibrary, MdPlaylistPlay } from "react-icons/md";
@@ -6,7 +7,7 @@ import { IoMdArrowDropdown } from "react-icons/io";
 import './Sidebar.css'
 
 const Sidebar = ({SideBar}) => {
-
+  const navigate = useNavigate();
 
   return (
     <div className={`
@@ -20,7 +21,7 @@ const Sidebar = ({SideBar}) => {
       <div className="flex flex-col gap-3">
         <SidebarItem icon={<FaHome size={20} className="text-red-400" />} text="Home" />
         <SidebarItem icon={<SiYoutubeshorts size={20} className="text-blue-400" />} text="Shorts" />
-        <SidebarItem icon={<MdOutlineSubscriptions size={20} className="text-green-400" />} text="Subscriptions" />
+        <SidebarItem onClick={() => navigate('/subscriptions')} icon={<MdOutlineSubscriptions size={20} className="text-green-400" />} text="Subscriptions" />
       </div>
       <hr className="my-3 border-gray-800" />
 
@@ -59,9 +60,9 @@ const Sidebar = ({SideBar}) => {
 };
 
 // Reusable Sidebar Item Component
-const SidebarItem = ({ icon, text }) => {
+const SidebarItem = ({ icon, text, onClick }) => {
   return (
-    <div className="flex items-center gap-4 px-3 py-2 hover:translate-x-1 hover:shadow-lg rounded-lg cursor-pointer transition-all duration-200" style={{background:'transparent'}}>
+    <div onClick={onClick} className="flex items-center gap-4 px-3 py-2 hover:translate-x-1 hover:shadow-lg rounded-lg cursor-pointer transition-all duration-200" style={{background:'transparent'}}>
       <div className="flex items-center justify-center w-8 h-8 rounded-full glass-card">{icon}</div>
       <span className="text-sm font-medium" style={{color:'var(--text)'}}>{text}</span>
     </div>

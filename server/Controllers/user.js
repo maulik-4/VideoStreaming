@@ -12,6 +12,95 @@ class UserController {
     };
   }
 
+  // Subscribe to a channel
+  async subscribe(req, res) {
+    try {
+      const targetId = req.params.id;
+      const currentUser = req.user;
+      if (currentUser._id.equals(targetId)) return res.status(400).json({ message: "Cannot subscribe to yourself" });
+
+      const already = currentUser.subscriptions && currentUser.subscriptions.find(id => id.toString() === targetId);
+      if (already) return res.status(400).json({ message: "Already subscribed" });
+
+      currentUser.subscriptions = currentUser.subscriptions || [];
+      currentUser.subscriptions.push(targetId);
+      await currentUser.save();
+
+      const targetUser = await User.findById(targetId);
+      if (targetUser) {
+        targetUser.subscribersCount = (targetUser.subscribersCount || 0) + 1;
+        await targetUser.save();
+      }
+
+      res.status(200).json({ message: "Subscribed" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to subscribe" });
+    }
+  }
+
+  // Unsubscribe
+  async unsubscribe(req, res) {
+    try {
+      const targetId = req.params.id;
+      const currentUser = req.user;
+      currentUser.subscriptions = (currentUser.subscriptions || []).filter(id => id.toString() !== targetId);
+      await currentUser.save();
+
+      const targetUser = await User.findById(targetId);
+      if (targetUser) {
+        targetUser.subscribersCount = Math.max(0, (targetUser.subscribersCount || 0) - 1);
+        await targetUser.save();
+      }
+
+      res.status(200).json({ message: "Unsubscribed" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to unsubscribe" });
+    }
+  }
+
+  // Get videos from subscriptions (for feed)
+  async getSubscriptionsVideos(req, res) {
+    try {
+      const subs = req.user.subscriptions || [];
+      const Video = require('../Modals/video');
+      const videos = await Video.find({ user: { $in: subs } }).populate('user', 'userName channelName profilePic');
+      res.status(200).json({ success: 'yes', data: videos });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to fetch subscriptions videos" });
+    }
+  }
+
+  // Change role (admin only)
+  async changeRole(req, res) {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      if (!['user', 'admin'].includes(role)) return res.status(400).json({ message: 'Invalid role' });
+      const user = await User.findByIdAndUpdate(id, { role }, { new: true });
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      res.status(200).json({ message: 'Role updated', user });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to change role' });
+    }
+  }
+
+  // Get profile by channel name
+  async getByChannelName(req, res) {
+    try {
+      const { channelName } = req.params;
+      const user = await User.findOne({ channelName }).select('_id channelName userName profilePic about');
+      if (!user) return res.status(404).json({ message: 'Channel not found' });
+      res.status(200).json({ success: 'yes', data: user });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch channel' });
+    }
+  }
+
   // Signup
   async userSignup(req, res) {
     try {

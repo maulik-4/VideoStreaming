@@ -5,6 +5,7 @@ import { AiFillLike, AiFillDislike } from 'react-icons/ai';
 import { RiDownloadLine } from 'react-icons/ri';
 import { BsDot } from 'react-icons/bs';
 import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
 
@@ -21,11 +22,18 @@ const Video_Page = ({ SideBar }) => {
   const channelName = video_Data?.user?.channelName || 'Loading...';
   const profilePic = video_Data?.user?.profilePic || 'https://via.placeholder.com/150';
   const [videos, setVideos] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [isEditingVideo, setIsEditingVideo] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
 
   // All the handler functions remain the same
   const HandleLikes = async () => {
     try {
-      const res = await axios.put(`https://yotube-full-stack.onrender.com/api/like/${id}`);
+      const res = await axiosInstance.put(`/api/like/${id}`);
       const token = localStorage.getItem('token');
       if(!token){
         toast.error("Please Login to like the video");
@@ -40,7 +48,7 @@ const Video_Page = ({ SideBar }) => {
   
   const HandleDislike = async () => {
     try {
-      const res = await axios.put(`https://yotube-full-stack.onrender.com/api/dislike/${id}`);
+      const res = await axiosInstance.put(`/api/dislike/${id}`);
       const token = localStorage.getItem('token');
       if(!token){
         toast.error("Please Login to dislike the video");
@@ -55,7 +63,7 @@ const Video_Page = ({ SideBar }) => {
   
   const HanldeShare = async() => {
     try{
-      await navigator.clipboard.writeText(`https://yotube-full-stack.onrender.com/watch/${id}`);
+      await navigator.clipboard.writeText(`${window.location.origin}/watch/${id}`);
       toast.success("Link Copied to Clipboard");
     }
     catch(err){
@@ -65,7 +73,7 @@ const Video_Page = ({ SideBar }) => {
   
   const HandleViews = async() => {
     try{
-      const res = await axios.put(`https://yotube-full-stack.onrender.com/api/views/${id}`);
+      const res = await axiosInstance.put(`/api/views/${id}`);
       setviews(res.data.views);
     }
     catch(err){
@@ -75,17 +83,21 @@ const Video_Page = ({ SideBar }) => {
 
   // useEffect hooks remain the same
   useEffect(() => {
-    axios.get(`https://yotube-full-stack.onrender.com/api/getAllVideos/${id}`)
+    axiosInstance.get(`/api/getAllVideos/${id}`)
       .then((res) => {
         const { data } = res.data;
         setvideo_Data(data);
+        setEditTitle(data.title || '');
+        setEditDescription(data.description || '');
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setSubscribed((currentUser.subscriptions || []).includes(data.user?._id));
         HandleViews();
       })
       .catch((err) => console.log(err));
   }, [id]);
 
   useEffect(() => {
-    axios.get("https://yotube-full-stack.onrender.com/api/getAllVideos")
+    axiosInstance.get('/api/getAllVideos')
       .then((res) => {
         const { data } = res.data;
         const unblockedVideos = data.filter(video => !video.user.isBlocked);
@@ -93,6 +105,76 @@ const Video_Page = ({ SideBar }) => {
       })
       .catch((err) => console.log(err));
   }, []);
+
+  const postComment = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return toast.error('Please login to comment');
+      await axiosInstance.post(`/api/${id}/comments`, { text: commentText });
+      const videoRes = await axiosInstance.get(`/api/getAllVideos/${id}`);
+      setvideo_Data(videoRes.data.data);
+      setCommentText('');
+      toast.success('Comment added');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to add comment');
+    }
+  };
+
+  const startEditComment = (c) => {
+    setEditingCommentId(c._id);
+    setEditingCommentText(c.text);
+  };
+
+  const saveEditComment = async () => {
+    try {
+      await axiosInstance.put(`/api/${id}/comments/${editingCommentId}`, { text: editingCommentText });
+      const videoRes = await axiosInstance.get(`/api/getAllVideos/${id}`);
+      setvideo_Data(videoRes.data.data);
+      setEditingCommentId(null);
+      setEditingCommentText('');
+      toast.success('Comment updated');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update comment');
+    }
+  };
+
+  const toggleEditVideo = () => {
+    setIsEditingVideo(!isEditingVideo);
+  };
+
+  const saveVideoEdits = async () => {
+    try {
+      await axiosInstance.put(`/api/${id}`, { title: editTitle, description: editDescription });
+      const videoRes = await axiosInstance.get(`/api/getAllVideos/${id}`);
+      setvideo_Data(videoRes.data.data);
+      setIsEditingVideo(false);
+      toast.success('Video updated');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update video');
+    }
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return toast.error('Please login to subscribe');
+      if (subscribed) {
+        await axiosInstance.post(`/auth/unsubscribe/${video_Data.user._id}`);
+        setSubscribed(false);
+        toast.success('Unsubscribed');
+      } else {
+        await axiosInstance.post(`/auth/subscribe/${video_Data.user._id}`);
+        setSubscribed(true);
+        toast.success('Subscribed');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Subscription failed');
+    }
+  };
 
   // Format date function
   const formatDate = (dateString) => {
@@ -150,9 +232,9 @@ const Video_Page = ({ SideBar }) => {
                     <h2 className="font-bold text-base md:text-lg">{channelName}</h2>
                     <p className="text-xs text-muted">{video_Data?.user?.subscribers || 0} subscribers</p>
                   </div>
-                  <button className="ml-2 px-4 py-1.5 rounded-full flex items-center gap-2 text-sm transition-colors bg-card hover:opacity-90 hidden sm:flex">
+                  <button onClick={handleSubscribe} className="ml-2 px-4 py-1.5 rounded-full flex items-center gap-2 text-sm transition-colors bg-card hover:opacity-90 hidden sm:flex">
                     <IoIosNotificationsOutline size={18} />
-                    <span>Subscribe</span>
+                    <span>{subscribed ? 'Subscribed' : 'Subscribe'}</span>
                   </button>
                 </div>
 
@@ -191,6 +273,75 @@ const Video_Page = ({ SideBar }) => {
                 <p className="text-muted text-sm leading-relaxed whitespace-pre-line">
                   {description}
                 </p>
+              </div>
+
+              {/* Edit Video (owner) */}
+              <div className="mt-4">
+                {video_Data?.user && JSON.parse(localStorage.getItem('user') || '{}')._id === video_Data.user._id && (
+                  <div className="flex items-center gap-3">
+                    {!isEditingVideo ? (
+                      <button onClick={toggleEditVideo} className="px-4 py-2 accent-btn rounded-lg">Edit Video</button>
+                    ) : (
+                      <div className="w-full glass-card p-4 rounded-lg">
+                        <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full input-card p-2 rounded mb-2" />
+                        <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="w-full input-card p-2 rounded mb-2" rows={4} />
+                        <div className="flex gap-2">
+                          <button onClick={saveVideoEdits} className="px-4 py-2 accent-btn rounded">Save</button>
+                          <button onClick={toggleEditVideo} className="px-4 py-2 border border-soft rounded">Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Comments Section */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3">Comments ({video_Data?.comments?.length || 0})</h3>
+
+                {/* Comment box */}
+                <div className="mb-4">
+                  <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Add a public comment..." className="w-full input-card p-3 rounded mb-2" rows={3} />
+                  <div className="flex justify-end">
+                    <button onClick={postComment} className="px-4 py-2 accent-btn rounded">Post</button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {(video_Data?.comments || []).slice().reverse().map((c) => (
+                    <div key={c._id} className="p-3 glass-card rounded">
+                      <div className="flex items-start gap-3">
+                        <img src={c.user?.profilePic || 'https://via.placeholder.com/40'} className="w-10 h-10 rounded-full object-cover" alt="u" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{c.user?.channelName || c.user?.userName}</div>
+                              <div className="text-xs text-muted">{formatDate(c.createdAt)}</div>
+                            </div>
+                            <div>
+                              {JSON.parse(localStorage.getItem('user') || '{}')._id === c.user?._id && (
+                                <button onClick={() => startEditComment(c)} className="text-sm text-blue-300">Edit</button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-2">
+                            {editingCommentId === c._id ? (
+                              <div>
+                                <textarea value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} className="w-full input-card p-2 rounded mb-2" rows={3} />
+                                <div className="flex gap-2 justify-end">
+                                  <button onClick={saveEditComment} className="px-3 py-1 accent-btn rounded">Save</button>
+                                  <button onClick={() => setEditingCommentId(null)} className="px-3 py-1 border border-soft rounded">Cancel</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted whitespace-pre-line">{c.text}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

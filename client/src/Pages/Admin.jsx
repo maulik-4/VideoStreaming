@@ -61,6 +61,17 @@ function Admin() {
     }
   };
 
+  const changeRole = async (id, role) => {
+    try {
+      await axiosInstance.put(`/auth/change-role/${id}`, { role });
+      fetchUsers();
+      toast.success('Role updated');
+    } catch (err) {
+      console.error('Error changing role:', err);
+      toast.error('Failed to change role');
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -77,6 +88,7 @@ function Admin() {
             <th className="px-6 py-4 text-left">Channel Name</th>
             <th className="px-6 py-4 text-left">Role</th>
             <th className="px-6 py-4 text-left">Status</th>
+            <th className="px-6 py-4 text-left">Change Role</th>
             <th className="px-6 py-4 text-left">Action</th>
           </tr>
         </thead>
@@ -107,6 +119,16 @@ function Admin() {
                 >
                   {user.isBlocked ? "Blocked" : "Active"}
                 </span>
+              </td>
+              <td className="px-6 py-4">
+                <select
+                  value={user.role}
+                  onChange={(e) => changeRole(user._id, e.target.value)}
+                  className="input-card p-2 rounded"
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
               </td>
               <td className="px-6 py-4">
                 {user.role !== "admin" && (

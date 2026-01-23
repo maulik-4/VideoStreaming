@@ -37,5 +37,11 @@ const videoSchema = new mongoose.Schema({
         type: Number,
         default: 0
     }
+    ,
+    comments: [new mongoose.Schema({
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        text: { type: String, required: true },
+        edited: { type: Boolean, default: false }
+    }, { timestamps: true })]
 } , {timestamps : true});
 module.exports = mongoose.model('Video', videoSchema);

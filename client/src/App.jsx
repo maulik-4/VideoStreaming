@@ -10,6 +10,7 @@ import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Upload from './Pages/Upload';
 import Admin from './Pages/Admin';
+import Subscriptions from './Pages/Subscriptions';
 import Footer from './Components/Footer';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path='/' element={<Homepage SideBar={showSidebar} />} />
             <Route path='/watch/:id' element={<Video_Page SideBar={showSidebar} />} />
             <Route path='/profile/:id' element={<Profile SideBar={showSidebar} />} />
+            <Route path='/subscriptions' element={<Subscriptions SideBar={showSidebar} />} />
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />
             <Route path='/upload' element={<Upload />} />

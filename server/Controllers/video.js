@@ -78,7 +78,9 @@ class VideoController {
   async getVideoById(req, res) {
     try {
       const { id } = req.params;
-      const videoData = await Video.findById(id).populate('user', 'userName channelName profilePic');
+      const videoData = await Video.findById(id)
+        .populate('user', 'userName channelName profilePic')
+        .populate({ path: 'comments.user', select: 'userName channelName profilePic' });
       if (!videoData) {
         return res.status(404).json({ message: "Video not found" });
       }
@@ -156,6 +158,69 @@ class VideoController {
       });
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  // Add comment to video
+  async addComment(req, res) {
+    try {
+      const { id } = req.params;
+      const { text } = req.body;
+      if (!text || !text.trim()) return res.status(400).json({ message: 'Comment cannot be empty' });
+      const video = await Video.findById(id);
+      if (!video) return res.status(404).json({ message: 'Video not found' });
+      const comment = { user: req.user._id, text };
+      video.comments.push(comment);
+      await video.save();
+      // populate last comment's user
+      await video.populate({ path: 'comments.user', select: 'userName channelName profilePic' });
+      res.status(201).json({ message: 'Comment added', comment: video.comments[video.comments.length - 1] });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to add comment' });
+    }
+  }
+
+  // Edit a comment
+  async editComment(req, res) {
+    try {
+      const { videoId, commentId } = req.params;
+      const { text } = req.body;
+      if (!text || !text.trim()) return res.status(400).json({ message: 'Comment cannot be empty' });
+      const video = await Video.findById(videoId);
+      if (!video) return res.status(404).json({ message: 'Video not found' });
+      const comment = video.comments.id(commentId);
+      if (!comment) return res.status(404).json({ message: 'Comment not found' });
+      if (comment.user.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not allowed' });
+      comment.text = text;
+      comment.edited = true;
+      await video.save();
+      res.status(200).json({ message: 'Comment updated', comment });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to edit comment' });
+    }
+  }
+
+  // Edit video metadata (owner or admin)
+  async editVideo(req, res) {
+    try {
+      const { id } = req.params;
+      const { title, description, category } = req.body;
+      const video = await Video.findById(id);
+      if (!video) return res.status(404).json({ message: 'Video not found' });
+      // allow if owner or admin
+      if (video.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not allowed' });
+      }
+      if (title) video.title = title;
+      if (description) video.description = description;
+      if (category) video.category = category;
+      await video.save();
+      res.status(200).json({ message: 'Video updated', data: video });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to update video' });
     }
   }
 }

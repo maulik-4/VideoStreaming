@@ -115,22 +115,32 @@ const YouTubePlayer = () => {
 
     // Track progress every 10 seconds while playing
     trackingIntervalRef.current = setInterval(() => {
-      if (playerRef.current && videoMetadata) {
+      if (playerRef.current) {
         try {
           const currentTime = playerRef.current.getCurrentTime();
           const duration = playerRef.current.getDuration();
 
+          // Use metadata if available, otherwise construct from videoId
+          const trackingData = videoMetadata || {
+            title: 'YouTube Video',
+            thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+            channelName: 'YouTube',
+            duration: duration
+          };
+
+          console.log(`📺 Tracking YouTube: ${currentTime}s / ${duration}s`);
+          
           historyTracker.trackProgress({
             videoId: videoId,
             platform: 'youtube',
             progress: currentTime,
             duration: duration,
-            title: videoMetadata.title,
-            thumbnail: videoMetadata.thumbnail,
-            channelName: videoMetadata.channelName
+            title: trackingData.title,
+            thumbnail: trackingData.thumbnail,
+            channelName: trackingData.channelName
           });
         } catch (error) {
-          console.error('Failed to track YouTube progress:', error);
+          console.error('❌ Failed to track YouTube progress:', error);
         }
       }
     }, 10000); // Every 10 seconds
@@ -143,22 +153,31 @@ const YouTubePlayer = () => {
     }
     
     // Save current position when stopping
-    if (playerRef.current && videoMetadata) {
+    if (playerRef.current) {
       try {
         const currentTime = playerRef.current.getCurrentTime();
         const duration = playerRef.current.getDuration();
+        
+        const trackingData = videoMetadata || {
+          title: 'YouTube Video',
+          thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+          channelName: 'YouTube',
+          duration: duration
+        };
+
+        console.log(`📺 Saving YouTube progress on stop: ${currentTime}s / ${duration}s`);
         
         historyTracker.trackProgress({
           videoId: videoId,
           platform: 'youtube',
           progress: currentTime,
           duration: duration,
-          title: videoMetadata.title,
-          thumbnail: videoMetadata.thumbnail,
-          channelName: videoMetadata.channelName
+          title: trackingData.title,
+          thumbnail: trackingData.thumbnail,
+          channelName: trackingData.channelName
         });
       } catch (error) {
-        console.error('Failed to save YouTube progress:', error);
+        console.error('❌ Failed to save YouTube progress:', error);
       }
     }
   };
@@ -188,8 +207,47 @@ const YouTubePlayer = () => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+    
+    // Cleanup on unmount - save progress immediately
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      console.log('🚪 Unmounting YouTubePlayer, saving history...');
+      
+      // Save current progress immediately before leaving
+      if (playerRef.current) {
+        try {
+          const currentTime = playerRef.current.getCurrentTime();
+          const duration = playerRef.current.getDuration();
+          
+          if (currentTime > 5) {
+            const trackingData = videoMetadata || {
+              title: 'YouTube Video',
+              thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+              channelName: 'YouTube',
+              duration: duration
+            };
+
+            historyTracker.trackProgress({
+              videoId: videoId,
+              platform: 'youtube',
+              progress: currentTime,
+              duration: duration,
+              title: trackingData.title,
+              thumbnail: trackingData.thumbnail,
+              channelName: trackingData.channelName
+            });
+            
+            // Force immediate save
+            historyTracker.DEBOUNCE_TIME = 0;
+            historyTracker.saveNow();
+            historyTracker.DEBOUNCE_TIME = 5000; // Reset debounce
+          }
+        } catch (error) {
+          console.error('Failed to save on unmount:', error);
+        }
+      }
+    };
+  }, [videoId, videoMetadata]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8" style={{ background: 'var(--bg)', color: 'var(--text)' }}>

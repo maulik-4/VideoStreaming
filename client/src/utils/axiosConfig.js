@@ -6,12 +6,19 @@ const axiosInstance = axios.create({
   withCredentials: true
 });
 
-// Add device ID to every request
+// Add device ID and authorization token to every request
 axiosInstance.interceptors.request.use(config => {
   const deviceId = localStorage.getItem('deviceId');
   if (deviceId) {
     config.headers['X-Device-ID'] = deviceId;
   }
+  
+  // Add Bearer token if available
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   return config;
 });
 

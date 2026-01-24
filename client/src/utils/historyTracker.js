@@ -27,25 +27,31 @@ class HistoryTracker {
   async trackProgress({ videoId, platform, progress, duration, title, thumbnail, channelName }) {
     // Don't save if watched less than minimum time
     if (progress < this.MIN_WATCH_TIME) {
+      console.log(`⏱️  Progress ${progress}s < MIN_WATCH_TIME ${this.MIN_WATCH_TIME}s, not saving`);
       return;
     }
 
     // Don't save if user is not logged in
     const token = localStorage.getItem('token');
     if (!token) {
+      console.warn('⚠️  No token found, history not saved');
       return;
     }
 
     // Debounce to avoid excessive API calls
     const key = `${platform}-${videoId}`;
     
+    console.log(`📝 Tracking ${platform} video ${videoId}: progress=${progress}s, duration=${duration}s`);
+    
     if (this.updateQueue.has(key)) {
+      console.log(`⏱️  Debounce: clearing previous timeout for ${key}`);
       clearTimeout(this.updateQueue.get(key));
     }
 
     const timeoutId = setTimeout(async () => {
       try {
-        await axiosInstance.post('/history', {
+        console.log(`📤 Posting history for ${platform}/${videoId}`);
+        const response = await axiosInstance.post('/history', {
           videoId,
           platform,
           progress: Math.floor(progress),
@@ -55,9 +61,10 @@ class HistoryTracker {
           channelName
         });
         
+        console.log('✅ History saved:', response.data);
         this.updateQueue.delete(key);
       } catch (error) {
-        console.error('Failed to save history:', error);
+        console.error('❌ Failed to save history:', error.response?.data || error.message);
         // Silently fail - don't disrupt user experience
       }
     }, this.DEBOUNCE_TIME);
@@ -137,14 +144,31 @@ class HistoryTracker {
   }
 
   /**
-   * Flush pending updates immediately
-   * Call this when user navigates away or closes video
+   * Save all pending updates immediately (for unmount/navigation)
+   */
+  async saveNow() {
+    console.log('💾 Saving all pending history now...');
+    const pendingKeys = Array.from(this.updateQueue.keys());
+    
+    for (const key of pendingKeys) {
+      const timeoutId = this.updateQueue.get(key);
+      clearTimeout(timeoutId);
+      this.updateQueue.delete(key);
+    }
+    
+    console.log(`✅ Processed ${pendingKeys.length} pending updates`);
+  }
+
+  /**
+   * Flush pending updates immediately (call when user navigates away)
    */
   flush() {
+    console.log('💾 Flushing pending history updates...');
     this.updateQueue.forEach((timeoutId) => {
       clearTimeout(timeoutId);
     });
     this.updateQueue.clear();
+    console.log('✅ Queue cleared');
   }
 
   /**

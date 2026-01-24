@@ -8,27 +8,30 @@ const {
     getHistoryItem,
     getYouTubeMetadata
 } = require('../Controllers/history');
-const auth = require('../middlewares/authentication');
+const authMiddleware = require('../middlewares/authentication');
 
 /**
  * History Routes
  * All routes require authentication
  */
 
+// Bind authentication middleware to preserve 'this' context
+const auth = authMiddleware.authenticate.bind(authMiddleware);
+
 // Save or update watch history
-router.post('/', auth.authenticate.bind(auth), saveHistory);
+router.post('/', auth, saveHistory);
 
 // Get user's watch history (with pagination)
-router.get('/', auth.authenticate.bind(auth), getHistory);
+router.get('/', auth, getHistory);
 
 // Get specific video history (for resume playback)
-router.get('/video/:videoId', auth.authenticate.bind(auth), getHistoryItem);
+router.get('/video/:videoId', auth, getHistoryItem);
 
 // Delete all history
-router.delete('/', auth.authenticate.bind(auth), clearHistory);
+router.delete('/', auth, clearHistory);
 
 // Delete single history item
-router.delete('/:videoId', auth.authenticate.bind(auth), deleteHistoryItem);
+router.delete('/:videoId', auth, deleteHistoryItem);
 
 // Get YouTube video metadata (helper endpoint)
 router.get('/youtube/metadata/:videoId', getYouTubeMetadata);

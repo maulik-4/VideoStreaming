@@ -224,12 +224,34 @@ const Video_Page = ({ SideBar }) => {
     }
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount - Save progress immediately
   useEffect(() => {
     return () => {
-      historyTracker.flush();
+      console.log('🚪 Unmounting Video_Page, saving history...');
+      // Save current progress immediately before leaving
+      if (videoRef.current && video_Data) {
+        const currentTime = videoRef.current.currentTime;
+        const duration = videoRef.current.duration;
+        
+        if (currentTime > 5) {
+          historyTracker.trackProgress({
+            videoId: id,
+            platform: 'local',
+            progress: currentTime,
+            duration: duration,
+            title: video_Data.title,
+            thumbnail: video_Data.thumbnail,
+            channelName: video_Data.user?.channelName || 'Unknown'
+          });
+          
+          // Force save by clearing debounce timeout
+          historyTracker.DEBOUNCE_TIME = 0;
+          historyTracker.saveNow();
+          historyTracker.DEBOUNCE_TIME = 5000; // Reset debounce
+        }
+      }
     };
-  }, []);
+  }, [id, video_Data]);
 
   // Format date function
   const formatDate = (dateString) => {

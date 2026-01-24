@@ -238,16 +238,32 @@ const getHistoryAnalytics = async (req, res) => {
                 $addFields: {
                     // Cap watchTime at duration when available to avoid over-counting
                     watchTime: {
-                        $cond: [
-                            { $gt: ["$duration", 0] },
-                            { $min: ["$progress", "$duration"] },
-                            "$progress"
-                        ]
+                        $let: {
+                            vars: {
+                                p: { $ifNull: ["$progress", 0] },
+                                d: { $ifNull: ["$duration", 0] }
+                            },
+                            in: {
+                                $cond: [
+                                    { $gt: ["$$d", 0] },
+                                    { $min: ["$$p", "$$d"] },
+                                    "$$p"
+                                ]
+                            }
+                        }
                     },
+                    // Safely convert to ObjectId only when platform is local and string is valid
                     videoObjectId: {
                         $cond: [
                             { $eq: ["$platform", "local"] },
-                            { $toObjectId: "$videoId" },
+                            {
+                                $convert: {
+                                    input: "$videoId",
+                                    to: "objectId",
+                                    onError: null,
+                                    onNull: null
+                                }
+                            },
                             null
                         ]
                     },
@@ -286,9 +302,9 @@ const getHistoryAnalytics = async (req, res) => {
                     durationBucket: {
                         $switch: {
                             branches: [
-                                { case: { $lte: ["$duration", 300] }, then: "Short (<5 min)" },
-                                { case: { $and: [ { $gt: ["$duration", 300] }, { $lte: ["$duration", 1200] } ] }, then: "Medium (5-20 min)" },
-                                { case: { $gt: ["$duration", 1200] }, then: "Long (>20 min)" }
+                                { case: { $lte: [{ $ifNull: ["$duration", 0] }, 300] }, then: "Short (<5 min)" },
+                                { case: { $and: [ { $gt: [{ $ifNull: ["$duration", 0] }, 300] }, { $lte: [{ $ifNull: ["$duration", 0] }, 1200] } ] }, then: "Medium (5-20 min)" },
+                                { case: { $gt: [{ $ifNull: ["$duration", 0] }, 1200] }, then: "Long (>20 min)" }
                             ],
                             default: "Unknown"
                         }

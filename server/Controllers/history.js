@@ -236,21 +236,20 @@ const getHistoryAnalytics = async (req, res) => {
             { $match: { user: userId } },
             {
                 $addFields: {
+                    progressSafe: {
+                        $convert: { input: "$progress", to: "double", onError: 0, onNull: 0 }
+                    },
+                    durationSafe: {
+                        $convert: { input: "$duration", to: "double", onError: 0, onNull: 0 }
+                    },
+                    watchedAtSafe: { $ifNull: ["$watchedAt", "$createdAt"] },
                     // Cap watchTime at duration when available to avoid over-counting
                     watchTime: {
-                        $let: {
-                            vars: {
-                                p: { $ifNull: ["$progress", 0] },
-                                d: { $ifNull: ["$duration", 0] }
-                            },
-                            in: {
-                                $cond: [
-                                    { $gt: ["$$d", 0] },
-                                    { $min: ["$$p", "$$d"] },
-                                    "$$p"
-                                ]
-                            }
-                        }
+                        $cond: [
+                            { $gt: ["$durationSafe", 0] },
+                            { $min: ["$progressSafe", "$durationSafe"] },
+                            "$progressSafe"
+                        ]
                     },
                     // Safely convert to ObjectId only when platform is local and string is valid
                     videoObjectId: {
@@ -268,12 +267,13 @@ const getHistoryAnalytics = async (req, res) => {
                         ]
                     },
                     language: {
-                        // Simple heuristic: detect Devanagari to label Hindi/Regional; fallback English/Other
+                        // Heuristic: detect Devanagari characters; fall back to English/Other
                         $cond: [
                             {
                                 $regexMatch: {
                                     input: "$title",
-                                    regex: /[\u0900-\u097F]/
+                                    // Inline Devanagari range to avoid PCRE2 escape issues
+                                    regex: "[ऀ-ॿ]"
                                 }
                             },
                             "Hindi / Regional",
@@ -302,9 +302,9 @@ const getHistoryAnalytics = async (req, res) => {
                     durationBucket: {
                         $switch: {
                             branches: [
-                                { case: { $lte: [{ $ifNull: ["$duration", 0] }, 300] }, then: "Short (<5 min)" },
-                                { case: { $and: [ { $gt: [{ $ifNull: ["$duration", 0] }, 300] }, { $lte: [{ $ifNull: ["$duration", 0] }, 1200] } ] }, then: "Medium (5-20 min)" },
-                                { case: { $gt: [{ $ifNull: ["$duration", 0] }, 1200] }, then: "Long (>20 min)" }
+                                { case: { $lte: ["$durationSafe", 300] }, then: "Short (<5 min)" },
+                                { case: { $and: [ { $gt: ["$durationSafe", 300] }, { $lte: ["$durationSafe", 1200] } ] }, then: "Medium (5-20 min)" },
+                                { case: { $gt: ["$durationSafe", 1200] }, then: "Long (>20 min)" }
                             ],
                             default: "Unknown"
                         }
@@ -372,7 +372,7 @@ const getHistoryAnalytics = async (req, res) => {
                     daily: [
                         {
                             $group: {
-                                _id: { $dateToString: { format: "%Y-%m-%d", date: "$watchedAt" } },
+                                _id: { $dateToString: { format: "%Y-%m-%d", date: "$watchedAtSafe" } },
                                 watchTime: { $sum: "$watchTime" },
                                 count: { $sum: 1 }
                             }
@@ -384,8 +384,8 @@ const getHistoryAnalytics = async (req, res) => {
                         {
                             $group: {
                                 _id: {
-                                    year: { $isoWeekYear: "$watchedAt" },
-                                    week: { $isoWeek: "$watchedAt" }
+                                    year: { $isoWeekYear: "$watchedAtSafe" },
+                                    week: { $isoWeek: "$watchedAtSafe" }
                                 },
                                 watchTime: { $sum: "$watchTime" },
                                 count: { $sum: 1 }
@@ -395,7 +395,7 @@ const getHistoryAnalytics = async (req, res) => {
                         { $limit: 12 }
                     ],
                     peakHours: [
-                        { $group: { _id: { $hour: "$watchedAt" }, watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $group: { _id: { $hour: "$watchedAtSafe" }, watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
                         { $sort: { watchTime: -1 } },
                         { $limit: 24 }
                     ]

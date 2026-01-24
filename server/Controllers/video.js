@@ -223,6 +223,68 @@ class VideoController {
       res.status(500).json({ message: 'Failed to update video' });
     }
   }
+
+  // Search videos
+  async searchVideos(req, res) {
+    try {
+      const { q } = req.query;
+      
+      if (!q || !q.trim()) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+
+      const searchQuery = q.trim();
+      const CACHE_KEY = `search:${searchQuery.toLowerCase()}`;
+
+      // Try to get from cache
+      try {
+        const cachedResults = await redisClient.get(CACHE_KEY);
+        if (cachedResults) {
+          console.log("SEARCH CACHE HIT");
+          return res.status(200).json({
+            message: "Search results fetched successfully",
+            success: "yes",
+            data: JSON.parse(cachedResults)
+          });
+        }
+      } catch (redisErr) {
+        console.error("Redis read failed:", redisErr);
+      }
+
+      console.log("SEARCH CACHE MISS");
+
+      // Search in database
+      const videos = await Video.find({
+        $or: [
+          { title: { $regex: searchQuery, $options: 'i' } },
+          { description: { $regex: searchQuery, $options: 'i' } },
+          { category: { $regex: searchQuery, $options: 'i' } }
+        ]
+      })
+      .populate("user", "userName channelName profilePic isBlocked")
+      .lean();
+
+      // Cache results for 5 minutes
+      try {
+        await redisClient.set(
+          CACHE_KEY,
+          JSON.stringify(videos),
+          { EX: 300 }
+        );
+      } catch (redisErr) {
+        console.error("Redis write failed:", redisErr);
+      }
+
+      res.status(200).json({
+        message: "Search results fetched successfully",
+        success: "yes",
+        data: videos
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Search failed" });
+    }
+  }
 }
 
 module.exports = new VideoController();

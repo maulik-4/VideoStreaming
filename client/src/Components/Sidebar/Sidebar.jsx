@@ -11,9 +11,9 @@ const Sidebar = ({SideBar}) => {
 
   return (
     <div className={`
-      ${SideBar ? 'w-[25vw] md:w-[240px]' : 'w-0 px-0 overflow-hidden'} 
-      h-screen py-4 text-main 
-      flex flex-col px-3 overflow-y-auto scrollbar-hide scrollbar-bg-black
+      ${SideBar ? 'w-[25vw] md:w-[240px] px-3 py-4 overflow-y-auto' : 'w-0 px-0 py-0 overflow-hidden'} 
+      h-screen text-main 
+      flex flex-col scrollbar-hide scrollbar-bg-black
       transition-all duration-300 fixed md:relative z-40
       hidden lg:block glass-card
     `} style={{borderRight:'1px solid rgba(255,255,255,0.03)'}}>

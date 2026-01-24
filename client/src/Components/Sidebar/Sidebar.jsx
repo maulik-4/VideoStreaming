@@ -27,7 +27,7 @@ const Sidebar = ({SideBar}) => {
 
       {/* Library Section */}
       <div className="flex flex-col gap-3">
-        <SidebarItem icon={<MdVideoLibrary size={20} className="text-purple-400" />} text="Library" />
+        <SidebarItem onClick={() => navigate('/analytics')} icon={<MdVideoLibrary size={20} className="text-purple-400" />} text="Library" />
         <SidebarItem onClick={() => navigate('/history')} icon={<FaHistory size={20} className="text-blue-400" />} text="History" />
         <SidebarItem icon={<MdPlaylistPlay size={20} className="text-yellow-400" />} text="Your Videos" />
         <SidebarItem icon={<FaClock size={20} className="text-green-400" />} text="Watch Later" />

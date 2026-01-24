@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     saveHistory,
     getHistory,
+    getHistoryAnalytics,
     clearHistory,
     deleteHistoryItem,
     getHistoryItem,
@@ -23,6 +24,9 @@ router.post('/', auth, saveHistory);
 
 // Get user's watch history (with pagination)
 router.get('/', auth, getHistory);
+
+// Get analytics for the authenticated user
+router.get('/analytics', auth, getHistoryAnalytics);
 
 // Get specific video history (for resume playback)
 router.get('/video/:videoId', auth, getHistoryItem);

@@ -225,6 +225,202 @@ const getHistory = async (req, res) => {
 };
 
 /**
+ * Get watch analytics for the authenticated user
+ * GET /history/analytics
+ */
+const getHistoryAnalytics = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const analytics = await History.aggregate([
+            { $match: { user: userId } },
+            {
+                $addFields: {
+                    // Cap watchTime at duration when available to avoid over-counting
+                    watchTime: {
+                        $cond: [
+                            { $gt: ["$duration", 0] },
+                            { $min: ["$progress", "$duration"] },
+                            "$progress"
+                        ]
+                    },
+                    videoObjectId: {
+                        $cond: [
+                            { $eq: ["$platform", "local"] },
+                            { $toObjectId: "$videoId" },
+                            null
+                        ]
+                    },
+                    language: {
+                        // Simple heuristic: detect Devanagari to label Hindi/Regional; fallback English/Other
+                        $cond: [
+                            {
+                                $regexMatch: {
+                                    input: "$title",
+                                    regex: /[\u0900-\u097F]/
+                                }
+                            },
+                            "Hindi / Regional",
+                            "English / Other"
+                        ]
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'videos',
+                    localField: 'videoObjectId',
+                    foreignField: '_id',
+                    as: 'videoMeta'
+                }
+            },
+            {
+                $addFields: {
+                    category: {
+                        $cond: [
+                            { $eq: ["$platform", "local"] },
+                            { $ifNull: [{ $arrayElemAt: ["$videoMeta.category", 0] }, "Unknown"] },
+                            "YouTube"
+                        ]
+                    },
+                    durationBucket: {
+                        $switch: {
+                            branches: [
+                                { case: { $lte: ["$duration", 300] }, then: "Short (<5 min)" },
+                                { case: { $and: [ { $gt: ["$duration", 300] }, { $lte: ["$duration", 1200] } ] }, then: "Medium (5-20 min)" },
+                                { case: { $gt: ["$duration", 1200] }, then: "Long (>20 min)" }
+                            ],
+                            default: "Unknown"
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    videoMeta: 0,
+                    videoObjectId: 0
+                }
+            },
+            {
+                $facet: {
+                    totals: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalWatchTime: { $sum: "$watchTime" },
+                                totalEntries: { $sum: 1 },
+                                completedCount: { $sum: { $cond: ["$completed", 1, 0] } },
+                                averageWatchTime: { $avg: "$watchTime" }
+                            }
+                        }
+                    ],
+                    platformBreakdown: [
+                        { $group: { _id: "$platform", watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $sort: { watchTime: -1 } }
+                    ],
+                    perVideo: [
+                        {
+                            $group: {
+                                _id: {
+                                    videoId: "$videoId",
+                                    platform: "$platform",
+                                    title: "$title",
+                                    thumbnail: "$thumbnail",
+                                    channelName: "$channelName"
+                                },
+                                watchTime: { $sum: "$watchTime" },
+                                count: { $sum: 1 }
+                            }
+                        },
+                        { $sort: { watchTime: -1 } },
+                        { $limit: 20 }
+                    ],
+                    perCategory: [
+                        { $group: { _id: "$category", watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $sort: { watchTime: -1 } },
+                        { $limit: 20 }
+                    ],
+                    perChannel: [
+                        { $group: { _id: "$channelName", watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $sort: { watchTime: -1 } },
+                        { $limit: 20 }
+                    ],
+                    durationBuckets: [
+                        { $group: { _id: "$durationBucket", watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $sort: { watchTime: -1 } }
+                    ],
+                    languageBreakdown: [
+                        { $group: { _id: "$language", watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $sort: { watchTime: -1 } }
+                    ],
+                    daily: [
+                        {
+                            $group: {
+                                _id: { $dateToString: { format: "%Y-%m-%d", date: "$watchedAt" } },
+                                watchTime: { $sum: "$watchTime" },
+                                count: { $sum: 1 }
+                            }
+                        },
+                        { $sort: { _id: 1 } },
+                        { $limit: 30 }
+                    ],
+                    weekly: [
+                        {
+                            $group: {
+                                _id: {
+                                    year: { $isoWeekYear: "$watchedAt" },
+                                    week: { $isoWeek: "$watchedAt" }
+                                },
+                                watchTime: { $sum: "$watchTime" },
+                                count: { $sum: 1 }
+                            }
+                        },
+                        { $sort: { "_id.year": 1, "_id.week": 1 } },
+                        { $limit: 12 }
+                    ],
+                    peakHours: [
+                        { $group: { _id: { $hour: "$watchedAt" }, watchTime: { $sum: "$watchTime" }, count: { $sum: 1 } } },
+                        { $sort: { watchTime: -1 } },
+                        { $limit: 24 }
+                    ]
+                }
+            }
+        ]);
+
+        const result = analytics[0] || {};
+        const totals = (result.totals && result.totals[0]) || {
+            totalWatchTime: 0,
+            totalEntries: 0,
+            completedCount: 0,
+            averageWatchTime: 0
+        };
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totals,
+                platformBreakdown: result.platformBreakdown || [],
+                perVideo: result.perVideo || [],
+                perCategory: result.perCategory || [],
+                perChannel: result.perChannel || [],
+                durationBuckets: result.durationBuckets || [],
+                languageBreakdown: result.languageBreakdown || [],
+                daily: result.daily || [],
+                weekly: result.weekly || [],
+                peakHours: result.peakHours || []
+            }
+        });
+    } catch (error) {
+        console.error('Get history analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch analytics',
+            error: error.message
+        });
+    }
+};
+
+/**
  * Delete all watch history for a user
  * DELETE /history
  */
@@ -377,6 +573,7 @@ const getYouTubeMetadata = async (req, res) => {
 module.exports = {
     saveHistory,
     getHistory,
+    getHistoryAnalytics,
     clearHistory,
     deleteHistoryItem,
     getHistoryItem,

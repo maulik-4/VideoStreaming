@@ -12,10 +12,10 @@ function Footer() {
           <div>
               <h3 className="text-main font-medium text-lg mb-4 flex items-center">
               <FaYoutube className="text-red-600 mr-2 text-xl" />
-              YouTube Clone
+              Vidmo
             </h3>
               <p className="text-sm text-muted leading-relaxed">
-              A full-featured YouTube clone built with React, Node.js, and MongoDB.
+              A full-featured Vidmo platform built with React, Node.js, and MongoDB.
               Browse, upload, and interact with videos just like the real platform.
             </p>
           </div>

@@ -371,11 +371,6 @@ const Video_Page = ({ SideBar }) => {
                     <IoMdShareAlt size={18} />
                     <span>Share</span>
                   </button>
-                  
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors bg-card hover:opacity-90">
-                    <RiDownloadLine size={18} />
-                    <span>Download</span>
-                  </button>
                 </div>
               </div>
 

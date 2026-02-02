@@ -217,13 +217,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
               {theme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />}
             </button>
 
-            <div className="relative group hidden sm:block">
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full hidden group-hover:block"></div>
-              <IoIosNotificationsOutline
-                size={28}
-                className="bg-card p-1.5 rounded-full cursor-pointer hover:opacity-90 transition-colors"
-              />
-            </div>
+           
           </div>
 
     

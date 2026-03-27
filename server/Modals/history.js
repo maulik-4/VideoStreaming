@@ -98,6 +98,40 @@ const historySchema = new mongoose.Schema({
 // Each user can have only one history entry per video
 historySchema.index({ user: 1, videoId: 1, platform: 1 }, { unique: true });
 
+// Method to update completion status
+historySchema.methods.updateCompletionStatus = function() {
+    if (this.duration > 0) {
+        const watchPercentage = (this.progress / this.duration) * 100;
+        this.completed = watchPercentage >= 90;
+    } else {
+        this.completed = false;
+    }
+};
+
+// Static method to clean up old history entries for a user
+historySchema.statics.cleanOldHistory = async function(userId, keepCount = 100) {
+    try {
+        // Find all history entries for the user, sorted by most recent
+        const allHistory = await this.find({ user: userId }).sort({ watchedAt: -1 }).select('_id');
+        
+        // If history exceeds the keepCount, find IDs to delete
+        if (allHistory.length > keepCount) {
+            const idsToDelete = allHistory.slice(keepCount).map(doc => doc._id);
+            
+            // Delete the oldest entries
+            await this.deleteMany({ _id: { $in: idsToDelete } });
+            
+        }
+    } catch (error) {
+        // Log error but don't throw, as this is a background task
+        
+    }
+};
+
+const History = mongoose.model('History', historySchema);
+
+module.exports = History;
+
 // Index for efficient sorting and pagination
 historySchema.index({ user: 1, watchedAt: -1 });
 

@@ -94,6 +94,7 @@ class HistoryTracker {
    * @param {Object} videoData - Video metadata
    */
   trackYouTubeVideo(videoId, videoData) {
+    const { title, thumbnail, channelName } = videoData;
     return {
       update: (progress, duration) => {
         this.trackProgress({
@@ -101,9 +102,9 @@ class HistoryTracker {
           platform: 'youtube',
           progress,
           duration,
-          title: videoData.title,
-          thumbnail: videoData.thumbnail || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-          channelName: videoData.channelName || 'YouTube'
+          title,
+          thumbnail,
+          channelName
         });
       }
     };

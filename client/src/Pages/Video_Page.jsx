@@ -198,21 +198,19 @@ const Video_Page = ({ SideBar }) => {
   // Handle video time update (track progress)
   const handleVideoTimeUpdate = () => {
     if (!videoRef.current || !video_Data) return;
-    
+
     const currentTime = videoRef.current.currentTime;
     const duration = videoRef.current.duration;
-    
-    if (currentTime > 5) { // Only track after 5 seconds
-      historyTracker.trackProgress({
-        videoId: id,
-        platform: 'local',
-        progress: currentTime,
-        duration: duration,
-        title: video_Data.title,
-        thumbnail: video_Data.thumbnail,
-        channelName: video_Data.user?.channelName || 'Unknown'
-      });
-    }
+
+    historyTracker.trackProgress({
+      videoId: id,
+      platform: 'local',
+      progress: Math.floor(currentTime),
+      duration: Math.floor(duration),
+      title: video_Data.title,
+      thumbnail: video_Data.thumbnail,
+      channelName: video_Data.user.channelName
+    });
   };
 
   // Handle resume playback

@@ -26,7 +26,7 @@ const Login = () => {
         setLoading(true);
         
         // Generate a unique device ID
-        const deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const deviceId = localStorage.getItem('deviceId') || (Math.random().toString(36).substring(2) + Date.now().toString(36));
         
         // Store the device ID in localStorage
         localStorage.setItem("deviceId", deviceId);

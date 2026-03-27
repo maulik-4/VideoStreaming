@@ -93,7 +93,7 @@ const saveHistory = async (req, res) => {
 
         // Upsert history (update if exists, create if not)
         const historyEntry = await History.findOneAndUpdate(
-            { user: userId, videoId, platform },
+            { user: userId, videoId: String(videoId), platform },
             {
                 $set: {
                     ...videoData,

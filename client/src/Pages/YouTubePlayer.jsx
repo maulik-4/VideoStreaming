@@ -133,8 +133,8 @@ const YouTubePlayer = () => {
           historyTracker.trackProgress({
             videoId: videoId,
             platform: 'youtube',
-            progress: currentTime,
-            duration: duration,
+            progress: Math.floor(currentTime),
+            duration: Math.floor(duration),
             title: trackingData.title,
             thumbnail: trackingData.thumbnail,
             channelName: trackingData.channelName
@@ -170,8 +170,8 @@ const YouTubePlayer = () => {
         historyTracker.trackProgress({
           videoId: videoId,
           platform: 'youtube',
-          progress: currentTime,
-          duration: duration,
+          progress: Math.floor(currentTime),
+          duration: Math.floor(duration),
           title: trackingData.title,
           thumbnail: trackingData.thumbnail,
           channelName: trackingData.channelName

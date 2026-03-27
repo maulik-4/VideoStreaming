@@ -115,8 +115,9 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
         window.location.reload();
       })
       .catch(() => {
+        // Still navigate even if server call fails
+        navigate("/login");
       });
-    navigate("/login");
   };
 
   const handleSearchChange = (e) => {
@@ -196,7 +197,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
         </form>
 
        
-        <div className="flex items-center gap-0.5 xs:gap-2 sm:gap-4 ml-0.5 sm:ml-0">
+        <div className="flex items-center gap-1 xs:gap-2 sm:gap-4 ml-0.5 sm:ml-0">
        
           <div
             className="flex items-center bg-card px-1 sm:px-3 py-1 sm:py-1.5 rounded-full cursor-pointer hover:opacity-90 transition-colors whitespace-nowrap"
@@ -222,16 +223,20 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
 
     
           <div className="relative flex" ref={loginRef}>
-            <img
-              src={imageUrl || profPic}
+            <button
               onClick={() => setShowLogin(!showLogin)}
-              className="w-7 h-7 sm:w-9 sm:h-9 object-cover rounded-full cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all duration-300"
-              alt="Profile"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpCKq1XnPYYDaUIlwlsvmLPZ-9-rdK28RToA&s";
-              }}
-            />
+              className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all duration-300 flex items-center justify-center bg-card"
+            >
+              <img
+                src={imageUrl || profPic}
+                className="w-full h-full rounded-full"
+                alt="Profile"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpCKq1XnPYYDaUIlwlsvmLPZ-9-rdK28RToA&s";
+                }}
+              />
+            </button>
             
          
             {showLogin && (

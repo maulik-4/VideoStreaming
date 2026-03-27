@@ -184,7 +184,7 @@ const Analytics = ({ SideBar }) => {
     <div className="flex" style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       {SideBar && <Sidebar SideBar={SideBar} />}
 
-      <div className="flex-1 p-4 md:p-6" style={{ marginLeft: SideBar ? '240px' : '0' }}>
+      <div className="flex-1 p-4 md:p-6 lg:ml-[240px]">
         <div className="mb-6 flex items-center gap-3">
           <FaChartPie className="text-3xl" style={{ color: 'var(--accent)' }} />
           <div>

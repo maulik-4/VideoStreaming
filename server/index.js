@@ -14,7 +14,7 @@ class Server {
 
   setupMiddleware() {
     this.app.use(cors({
-      origin: ['http://localhost:5173', "https://yotube-full-stack.vercel.app"],
+      origin: ['http://localhost:5173', "https://yotube-full-stack.vercel.app", "https://vidmo.vercel.app"],
       credentials: true,
     }));
     

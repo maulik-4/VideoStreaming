@@ -51,7 +51,7 @@ const Sidebar = ({SideBar}) => {
 
       {/* Library Section */}
       <div className="flex flex-col gap-3">
-        <SidebarItem onClick={() => navigate('/analytics')} icon={<MdVideoLibrary size={20} className="text-purple-400" />} text="Library" />
+        <SidebarItem onClick={() => navigate('/analysis')} icon={<MdVideoLibrary size={20} className="text-purple-400" />} text="Analysis" />
         <SidebarItem onClick={() => navigate('/history')} icon={<FaHistory size={20} className="text-blue-400" />} text="History" />
         <SidebarItem
           onClick={() => currentUserId ? navigate(`/profile/${currentUserId}`) : navigate('/login')}

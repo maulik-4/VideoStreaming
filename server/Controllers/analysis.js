@@ -15,6 +15,7 @@ const getAnalysis = async (req, res) => {
         });
 
         const historyData = historyResponse.data;
+        console.log('Fetched History Data:', historyData); // Log fetched data
 
         if (!historyData || !historyData.history || historyData.history.length === 0) {
             return res.status(200).json({
@@ -39,9 +40,11 @@ const getAnalysis = async (req, res) => {
 
         // 3. Build a structured prompt for LLM
         const prompt = llmService.buildAnalysisPrompt(recentHistory);
+        console.log('Generated LLM Prompt:', prompt); // Log the generated prompt
 
         // 4. Call LLM API
         const analysis = await llmService.getLLMAnalysis(prompt);
+        console.log('Received LLM Analysis:', analysis); // Log the analysis from LLM
 
         // 5. Return structured JSON insights
         res.json(analysis);

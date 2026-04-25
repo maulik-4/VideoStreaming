@@ -3,8 +3,8 @@ const llmService = require('../Services/llmService');
 
 const getAnalysis = async (req, res) => {
     const { userId } = req.params;
-    const port = process.env.PORT || 5000;
-    const historyApiUrl = `http://localhost:${port}/api/history/${userId}`;
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const historyApiUrl = `${baseUrl}/api/history/${userId}`;
 
     try {
         // 1. Fetch data from existing history API

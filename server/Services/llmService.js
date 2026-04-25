@@ -1,4 +1,4 @@
-const axios = require('axios');
+const Groq = require('groq-sdk');
 
 const getLLMAnalysis = async (prompt) => {
     const apiKey = process.env.GROQ_API_KEY;
@@ -6,9 +6,10 @@ const getLLMAnalysis = async (prompt) => {
         throw new Error('GROQ_API_KEY is not set in environment variables.');
     }
 
+    const groq = new Groq({ apiKey });
+
     try {
-        const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: 'llama3-8b-8192',
+        const chatCompletion = await groq.chat.completions.create({
             messages: [
                 {
                     role: 'system',
@@ -38,24 +39,16 @@ const getLLMAnalysis = async (prompt) => {
                     content: prompt
                 }
             ],
-            temperature: 0.7,
-            max_tokens: 1024,
-            top_p: 1,
-            stream: false,
-            response_format: { "type": "json_object" }
-        }, {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
+            model: 'llama3-8b-8192',
+            response_format: { type: 'json_object' },
         });
 
         // Clean and parse LLM JSON response safely
-        const rawContent = response.data.choices[0].message.content;
+        const rawContent = chatCompletion.choices[0].message.content;
         return JSON.parse(rawContent);
 
     } catch (error) {
-        console.error('Error calling LLM API:', error.response ? error.response.data : error.message);
+        console.error('Error calling LLM API:', error);
         throw new Error('Failed to get analysis from LLM.');
     }
 };

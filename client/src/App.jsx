@@ -36,7 +36,7 @@ function App() {
             <Route path='/profile/:id' element={<Profile SideBar={showSidebar} />} />
             <Route path='/subscriptions' element={<Subscriptions SideBar={showSidebar} />} />
             <Route path='/history' element={<History SideBar={showSidebar} />} />
-            <Route path='/Analysis' element={<Analysis SideBar={showSidebar} />} />
+            <Route path='/analysis' element={<Analysis SideBar={showSidebar} />} />
             <Route path='/youtube/:videoId' element={<YouTubePlayer />} />
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />

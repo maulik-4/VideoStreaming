@@ -13,10 +13,7 @@ class DatabaseConnection {
     }
 
     try {
-      await mongoose.connect(this.MONGO_URL, { 
-        useNewUrlParser: true, 
-        useUnifiedTopology: true 
-      });
+      mongoose.connect(process.env.MONGO_URL);
       this.isConnected = true;
       
     } catch (err) {

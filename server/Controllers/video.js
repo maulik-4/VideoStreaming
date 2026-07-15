@@ -1,6 +1,6 @@
 const Video = require('../Modals/video');
 const redisClient = require('../Redis/redisClient');
-
+const { getIO } = require("../Socket/socket");
 class VideoController {
   constructor() {}
 
@@ -162,23 +162,54 @@ class VideoController {
 
   // Add comment to video
   async addComment(req, res) {
-    try {
-      const { id } = req.params;
-      const { text } = req.body;
-      if (!text || !text.trim()) return res.status(400).json({ message: 'Comment cannot be empty' });
-      const video = await Video.findById(id);
-      if (!video) return res.status(404).json({ message: 'Video not found' });
-      const comment = { user: req.user._id, text };
-      video.comments.push(comment);
-      await video.save();
-      // populate last comment's user
-      await video.populate({ path: 'comments.user', select: 'userName channelName profilePic' });
-      res.status(201).json({ message: 'Comment added', comment: video.comments[video.comments.length - 1] });
-    } catch (err) {
-      
-      res.status(500).json({ message: 'Failed to add comment' });
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Comment cannot be empty" });
     }
+
+    const video = await Video.findById(id);
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    const comment = {
+      user: req.user._id,
+      text
+    };
+
+    video.comments.push(comment);
+    await video.save();
+
+    await video.populate({
+      path: "comments.user",
+      select: "userName channelName profilePic"
+    });
+
+    const newComment = video.comments[video.comments.length - 1];
+
+    // 🔥 Emit the comment to everyone watching this video
+    console.log("Emitting new-comment", id);
+    getIO().to(id).emit("new-comment", {
+      videoId: id,
+      comment: newComment
+    });
+
+    return res.status(201).json({
+      message: "Comment added",
+      comment: newComment
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Failed to add comment"
+    });
   }
+}
 
   // Edit a comment
   async editComment(req, res) {

@@ -9,7 +9,7 @@ import axiosInstance from '../utils/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
 import historyTracker from '../utils/historyTracker';
-      
+import socket from '../utils/socket';
 const Video_Page = ({ SideBar }) => {
   const { id } = useParams();
   const [video_Data, setvideo_Data] = useState(null);
@@ -42,49 +42,49 @@ const Video_Page = ({ SideBar }) => {
     try {
       const res = await axiosInstance.put(`/api/like/${id}`);
       const token = localStorage.getItem('token');
-      if(!token){
+      if (!token) {
         toast.error("Please Login to like the video");
         return;
       }
       setLike(res.data.likes);
     }
     catch (err) {
-      
+
     }
   }
-  
+
   const HandleDislike = async () => {
     try {
       const res = await axiosInstance.put(`/api/dislike/${id}`);
       const token = localStorage.getItem('token');
-      if(!token){
+      if (!token) {
         toast.error("Please Login to dislike the video");
         return;
       }
       setdislike(res.data.dislike);
     }
     catch (err) {
-      
+
     }
   }
-  
-  const HanldeShare = async() => {
-    try{
+
+  const HanldeShare = async () => {
+    try {
       await navigator.clipboard.writeText(`${window.location.origin}/watch/${id}`);
       toast.success("Link Copied to Clipboard");
     }
-    catch(err){
-      
+    catch (err) {
+
     }
   }
-  
-  const HandleViews = async() => {
-    try{
+
+  const HandleViews = async () => {
+    try {
       const res = await axiosInstance.put(`/api/views/${id}`);
       setviews(res.data.views);
     }
-    catch(err){
-      
+    catch (err) {
+
     }
   }
 
@@ -99,11 +99,11 @@ const Video_Page = ({ SideBar }) => {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         setSubscribed((currentUser.subscriptions || []).includes(data.user?._id));
         HandleViews();
-        
+
         // Load resume time from history
         loadResumeTime(id);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [id]);
 
   useEffect(() => {
@@ -113,24 +113,58 @@ const Video_Page = ({ SideBar }) => {
         const unblockedVideos = data.filter(video => !video.user.isBlocked);
         setVideos(unblockedVideos);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
+  useEffect(() => {
+  if (!id) return;
 
-  const postComment = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return toast.error('Please login to comment');
-      await axiosInstance.post(`/api/${id}/comments`, { text: commentText });
-      const videoRes = await axiosInstance.get(`/api/getAllVideos/${id}`);
-      setvideo_Data(videoRes.data.data);
-      setCommentText('');
-      toast.success('Comment added');
-    } catch (err) {
-      
-      toast.error('Failed to add comment');
-    }
+  socket.emit("join-video", id);
+
+  return () => {
+    socket.emit("leave-video", id);
+  };
+}, [id]);
+useEffect(() => {
+  const handleNewComment = (data) => {
+    console.log("🔥 RECEIVED SOCKET EVENT:", data);
+
+    setvideo_Data((prev) => {
+      console.log("Previous state:", prev);
+
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        comments: [...(prev.comments || []), data.comment],
+      };
+    });
   };
 
+  socket.on("new-comment", handleNewComment);
+
+  return () => {
+    socket.off("new-comment", handleNewComment);
+  };
+}, []);
+ const postComment = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return toast.error("Please login to comment");
+    }
+
+    await axiosInstance.post(`/api/${id}/comments`, {
+      text: commentText,
+    });
+
+    setCommentText("");
+    toast.success("Comment added");
+
+  } catch (err) {
+    toast.error("Failed to add comment");
+  }
+};
   const startEditComment = (c) => {
     setEditingCommentId(c._id);
     setEditingCommentText(c.text);
@@ -145,7 +179,7 @@ const Video_Page = ({ SideBar }) => {
       setEditingCommentText('');
       toast.success('Comment updated');
     } catch (err) {
-      
+
       toast.error('Failed to update comment');
     }
   };
@@ -162,7 +196,7 @@ const Video_Page = ({ SideBar }) => {
       setIsEditingVideo(false);
       toast.success('Video updated');
     } catch (err) {
-      
+
       toast.error('Failed to update video');
     }
   };
@@ -181,7 +215,7 @@ const Video_Page = ({ SideBar }) => {
         toast.success('Subscribed');
       }
     } catch (err) {
-      
+
       toast.error('Subscription failed');
     }
   };
@@ -225,12 +259,12 @@ const Video_Page = ({ SideBar }) => {
   // Cleanup on unmount - Save progress immediately
   useEffect(() => {
     return () => {
-      
+
       // Save current progress immediately before leaving
       if (videoRef.current && video_Data) {
         const currentTime = videoRef.current.currentTime;
         const duration = videoRef.current.duration;
-        
+
         if (currentTime > 5) {
           historyTracker.trackProgress({
             videoId: id,
@@ -241,7 +275,7 @@ const Video_Page = ({ SideBar }) => {
             thumbnail: video_Data.thumbnail,
             channelName: video_Data.user?.channelName || 'Unknown'
           });
-          
+
           // Force save by clearing debounce timeout
           historyTracker.DEBOUNCE_TIME = 0;
           historyTracker.saveNow();
@@ -254,15 +288,15 @@ const Video_Page = ({ SideBar }) => {
   // Format date function
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
   return (
-    <div className="flex min-h-screen w-full md:flex-row flex-col" style={{background:'var(--bg)', color:'var(--text)'}}>
+    <div className="flex min-h-screen w-full md:flex-row flex-col" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* Pass the SideBar prop to the Sidebar component */}
       {SideBar && <Sidebar SideBar={SideBar} />}
       <ToastContainer position="top-right" autoClose={1000} theme="dark" />
@@ -273,7 +307,7 @@ const Video_Page = ({ SideBar }) => {
           {/* Video section */}
           <div className="w-full md:w-[70%]">
             {/* Video player */}
-            <div className="relative w-full rounded-xl mb-4 overflow-hidden shadow-lg" style={{background:'var(--card)'}}>
+            <div className="relative w-full rounded-xl mb-4 overflow-hidden shadow-lg" style={{ background: 'var(--card)' }}>
               <video
                 ref={videoRef}
                 src={videoLink}
@@ -288,7 +322,7 @@ const Video_Page = ({ SideBar }) => {
                   }
                 }}
               />
-              
+
               {/* Resume playback prompt */}
               {showResumePrompt && (
                 <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
@@ -319,7 +353,7 @@ const Video_Page = ({ SideBar }) => {
             {/* Video info */}
             <div className="backdrop-blur-sm shadow-lg p-4 rounded-xl mb-6 glass-card">
               <h1 className="font-bold text-xl md:text-2xl mb-3">{title}</h1>
-              
+
               <div className="flex items-center text-gray-400 text-sm mb-4">
                 <span>{views || video_Data?.views || 0} views</span>
                 <BsDot className="mx-1" />
@@ -328,7 +362,7 @@ const Video_Page = ({ SideBar }) => {
 
               {/* Channel and interaction buttons */}
               <div className="flex justify-between items-center flex-wrap gap-4 border-t border-b border-gray-700/50 py-4">
-                <div 
+                <div
                   onClick={() => navigate(`/profile/${video_Data?.user?._id}`)}
                   className="flex items-center gap-3 cursor-pointer"
                 >
@@ -349,22 +383,22 @@ const Video_Page = ({ SideBar }) => {
 
                 <div className="flex gap-2 flex-wrap">
                   <div className="flex rounded-full overflow-hidden bg-card/80">
-                    <button 
-                      onClick={HandleLikes} 
+                    <button
+                      onClick={HandleLikes}
                       className="px-4 py-2 flex items-center gap-1.5 hover:bg-blue-500/10 transition-colors border-r border-gray-700/50"
                     >
                       <AiFillLike size={18} className="text-blue-400" />
                       <span className="text-sm">{like || video_Data?.likes || 0}</span>
                     </button>
-                    <button 
-                      onClick={HandleDislike} 
+                    <button
+                      onClick={HandleDislike}
                       className="px-4 py-2 flex items-center gap-1.5 hover:bg-red-500/10 transition-colors"
                     >
                       <AiFillDislike size={18} className="text-red-400" />
                       <span className="text-sm">{dislike || video_Data?.dislike || 0}</span>
                     </button>
                   </div>
-                  
+
                   <button onClick={HanldeShare} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors bg-card hover:opacity-90">
                     <IoMdShareAlt size={18} />
                     <span>Share</span>
@@ -411,52 +445,92 @@ const Video_Page = ({ SideBar }) => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  {(video_Data?.comments || []).slice().reverse().map((c) => (
-                    <div key={c._id} className="p-3 glass-card rounded">
-                      <div className="flex items-start gap-3">
-                        <img src={c.user?.profilePic || 'https://via.placeholder.com/40'} className="w-10 h-10 rounded-full object-cover" alt="u" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium">{c.user?.channelName || c.user?.userName}</div>
-                              <div className="text-xs text-muted">{formatDate(c.createdAt)}</div>
-                            </div>
-                            <div>
-                              {JSON.parse(localStorage.getItem('user') || '{}')._id === c.user?._id && (
-                                <button onClick={() => startEditComment(c)} className="text-sm text-blue-300">Edit</button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="mt-2">
-                            {editingCommentId === c._id ? (
-                              <div>
-                                <textarea value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} className="w-full input-card p-2 rounded mb-2" rows={3} />
-                                <div className="flex gap-2 justify-end">
-                                  <button onClick={saveEditComment} className="px-3 py-1 accent-btn rounded">Save</button>
-                                  <button onClick={() => setEditingCommentId(null)} className="px-3 py-1 border border-soft rounded">Cancel</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <p className="text-sm text-muted whitespace-pre-line">{c.text}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="flex flex-col gap-3">
+  {(video_Data?.comments || [])
+    .slice()
+    .reverse()
+    .map((c) => (
+      <div key={c._id} className="p-3 glass-card rounded">
+        <div className="flex items-start gap-3">
+          <img
+            src={c.user?.profilePic || "https://via.placeholder.com/40"}
+            className="w-10 h-10 rounded-full object-cover"
+            alt="User"
+          />
+
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">
+                  {c.user?.channelName || c.user?.userName || "Unknown User"}
                 </div>
+
+                <div className="text-xs text-muted">
+                  {c.createdAt ? formatDate(c.createdAt) : "Just now"}
+                </div>
+              </div>
+
+              {JSON.parse(localStorage.getItem("user") || "{}")._id ===
+                c.user?._id && (
+                <button
+                  onClick={() => startEditComment(c)}
+                  className="text-sm text-blue-300"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+
+            <div className="mt-2">
+              {editingCommentId === c._id ? (
+                <>
+                  <textarea
+                    value={editingCommentText}
+                    onChange={(e) =>
+                      setEditingCommentText(e.target.value)
+                    }
+                    className="w-full input-card p-2 rounded mb-2"
+                    rows={3}
+                  />
+
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={saveEditComment}
+                      className="px-3 py-1 accent-btn rounded"
+                    >
+                      Save
+                    </button>
+
+                    <button
+                      onClick={() => setEditingCommentId(null)}
+                      className="px-3 py-1 border border-soft rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted whitespace-pre-line">
+                  {c.text}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+</div>
               </div>
             </div>
           </div>
 
           {/* Suggested videos section */}
-            <div className="w-full md:w-[30%]">
+          <div className="w-full md:w-[30%]">
             <h2 className="text-lg font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Suggested Videos</h2>
             <div className="flex flex-col gap-4">
               {videos.map((video) => (
-                <div 
-                  key={video._id} 
+                <div
+                  key={video._id}
                   className="transition-colors duration-300 rounded-lg overflow-hidden shadow-md cursor-pointer glass-card"
                   onClick={() => navigate(`/watch/${video._id}`)}
                 >

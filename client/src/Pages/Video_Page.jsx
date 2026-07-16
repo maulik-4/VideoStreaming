@@ -36,7 +36,7 @@ const Video_Page = ({ SideBar }) => {
   const historyTrackerRef = useRef(null);
   const [resumeTime, setResumeTime] = useState(0);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
-
+   
   // All the handler functions remain the same
   const HandleLikes = async () => {
     try {
@@ -116,14 +116,26 @@ const Video_Page = ({ SideBar }) => {
       .catch(() => { });
   }, []);
   useEffect(() => {
-  if (!id) return;
+    if (!id) return;
 
-  socket.emit("join-video", id);
+    const handleJoin = () => {
+      console.log(`Joining socket room for video: ${id}`);
+      socket.emit("join-video", id);
+    };
 
-  return () => {
-    socket.emit("leave-video", id);
-  };
-}, [id]);
+    if (socket.connected) {
+      handleJoin();
+    }
+    
+    // Automatically re-join if the socket disconnects and reconnects!
+    socket.on("connect", handleJoin);
+
+    return () => {
+      console.log(`Leaving socket room for video: ${id}`);
+      socket.emit("leave-video", id);
+      socket.off("connect", handleJoin);
+    };
+  }, [id]);
 useEffect(() => {
   const handleNewComment = (data) => {
     console.log("🔥 RECEIVED SOCKET EVENT:", data);

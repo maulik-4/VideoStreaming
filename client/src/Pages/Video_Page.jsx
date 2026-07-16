@@ -136,28 +136,47 @@ const Video_Page = ({ SideBar }) => {
       socket.off("connect", handleJoin);
     };
   }, [id]);
-useEffect(() => {
-  const handleNewComment = (data) => {
-    console.log("🔥 RECEIVED SOCKET EVENT:", data);
+  useEffect(() => {
+    const handleNewComment = (data) => {
+      console.log("🔥 RECEIVED SOCKET EVENT (new-comment):", data);
 
-    setvideo_Data((prev) => {
-      console.log("Previous state:", prev);
+      if (data.videoId !== id) return;
 
-      if (!prev) return prev;
+      setvideo_Data((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          comments: [...(prev.comments || []), data.comment],
+        };
+      });
+    };
 
-      return {
-        ...prev,
-        comments: [...(prev.comments || []), data.comment],
-      };
-    });
-  };
+    const handleEditComment = (data) => {
+      console.log("🔥 RECEIVED SOCKET EVENT (edit-comment):", data);
+      
+      if (data.videoId !== id) return;
 
-  socket.on("new-comment", handleNewComment);
+      setvideo_Data((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          comments: (prev.comments || []).map(c => 
+            c._id === data.commentId 
+              ? { ...c, text: data.text, edited: data.edited } 
+              : c
+          ),
+        };
+      });
+    };
 
-  return () => {
-    socket.off("new-comment", handleNewComment);
-  };
-}, []);
+    socket.on("new-comment", handleNewComment);
+    socket.on("edit-comment", handleEditComment);
+
+    return () => {
+      socket.off("new-comment", handleNewComment);
+      socket.off("edit-comment", handleEditComment);
+    };
+  }, [id]);
  const postComment = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -185,13 +204,11 @@ useEffect(() => {
   const saveEditComment = async () => {
     try {
       await axiosInstance.put(`/api/${id}/comments/${editingCommentId}`, { text: editingCommentText });
-      const videoRes = await axiosInstance.get(`/api/getAllVideos/${id}`);
-      setvideo_Data(videoRes.data.data);
+      // The socket event 'edit-comment' will handle the UI update for us and everyone else!
       setEditingCommentId(null);
       setEditingCommentText('');
       toast.success('Comment updated');
     } catch (err) {
-
       toast.error('Failed to update comment');
     }
   };

@@ -16,6 +16,7 @@ class VideoController {
         thumbnail
       });
       await videoUpload.save();
+      await redisClient.del("home:videos").catch(() => {});
       res.status(201).json({ message: "Video uploaded successfully", success: "yes", data: videoUpload });
     } catch (err) {
       
@@ -113,6 +114,7 @@ class VideoController {
       }
       videoData.likes += 1;
       const updatedVideo = await videoData.save();
+      await redisClient.del("home:videos").catch(() => {});
       res.status(200).json({
         message: "Like added successfully",
         likes: updatedVideo.likes
@@ -132,6 +134,7 @@ class VideoController {
       }
       videoData.dislike += 1;
       const updatedVideo = await videoData.save();
+      await redisClient.del("home:videos").catch(() => {});
       res.status(200).json({
         message: "Dislike added successfully",
         dislike: updatedVideo.dislike
@@ -151,6 +154,7 @@ class VideoController {
       }
       videoData.views += 1;
       const updatedVideo = await videoData.save();
+      await redisClient.del("home:videos").catch(() => {});
       res.status(200).json({
         message: "Views updated successfully",
         views: updatedVideo.views
@@ -183,6 +187,7 @@ class VideoController {
 
     video.comments.push(comment);
     await video.save();
+    await redisClient.del("home:videos").catch(() => {});
 
     await video.populate({
       path: "comments.user",
@@ -222,9 +227,20 @@ class VideoController {
       const comment = video.comments.id(commentId);
       if (!comment) return res.status(404).json({ message: 'Comment not found' });
       if (comment.user.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not allowed' });
+      
       comment.text = text;
       comment.edited = true;
       await video.save();
+      await redisClient.del("home:videos").catch(() => {});
+      
+      // 🔥 Emit the edited comment to everyone watching this video
+      getIO().to(videoId).emit("edit-comment", {
+        videoId,
+        commentId,
+        text,
+        edited: true
+      });
+
       res.status(200).json({ message: 'Comment updated', comment });
     } catch (err) {
       
@@ -247,6 +263,7 @@ class VideoController {
       if (description) video.description = description;
       if (category) video.category = category;
       await video.save();
+      await redisClient.del("home:videos").catch(() => {});
       res.status(200).json({ message: 'Video updated', data: video });
     } catch (err) {
       

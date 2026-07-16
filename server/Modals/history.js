@@ -98,40 +98,6 @@ const historySchema = new mongoose.Schema({
 // Each user can have only one history entry per video
 historySchema.index({ user: 1, videoId: 1, platform: 1 }, { unique: true });
 
-// Method to update completion status
-historySchema.methods.updateCompletionStatus = function() {
-    if (this.duration > 0) {
-        const watchPercentage = (this.progress / this.duration) * 100;
-        this.completed = watchPercentage >= 90;
-    } else {
-        this.completed = false;
-    }
-};
-
-// Static method to clean up old history entries for a user
-historySchema.statics.cleanOldHistory = async function(userId, keepCount = 100) {
-    try {
-        // Find all history entries for the user, sorted by most recent
-        const allHistory = await this.find({ user: userId }).sort({ watchedAt: -1 }).select('_id');
-        
-        // If history exceeds the keepCount, find IDs to delete
-        if (allHistory.length > keepCount) {
-            const idsToDelete = allHistory.slice(keepCount).map(doc => doc._id);
-            
-            // Delete the oldest entries
-            await this.deleteMany({ _id: { $in: idsToDelete } });
-            
-        }
-    } catch (error) {
-        // Log error but don't throw, as this is a background task
-        
-    }
-};
-
-const History = mongoose.model('History', historySchema);
-
-module.exports = History;
-
 // Index for efficient sorting and pagination
 historySchema.index({ user: 1, watchedAt: -1 });
 
@@ -145,23 +111,30 @@ historySchema.virtual('watchPercentage').get(function() {
 historySchema.methods.updateCompletionStatus = function() {
     if (this.duration > 0 && this.progress >= this.duration * 0.9) {
         this.completed = true;
+    } else {
+        this.completed = false;
     }
     return this.completed;
 };
 
-// Static method to clean old history (keep only latest 100 per user)
+// Static method to clean up old history entries for a user (keep only latest 100 per user)
 historySchema.statics.cleanOldHistory = async function(userId, limit = 100) {
-    const historyToDelete = await this.find({ user: userId })
-        .sort({ watchedAt: -1 })
-        .skip(limit)
-        .select('_id');
-    
-    if (historyToDelete.length > 0) {
-        const idsToDelete = historyToDelete.map(h => h._id);
-        await this.deleteMany({ _id: { $in: idsToDelete } });
-        return idsToDelete.length;
+    try {
+        const historyToDelete = await this.find({ user: userId })
+            .sort({ watchedAt: -1 })
+            .skip(limit)
+            .select('_id');
+        
+        if (historyToDelete.length > 0) {
+            const idsToDelete = historyToDelete.map(h => h._id);
+            await this.deleteMany({ _id: { $in: idsToDelete } });
+            return idsToDelete.length;
+        }
+        return 0;
+    } catch (error) {
+        return 0;
     }
-    return 0;
 };
 
-module.exports = mongoose.model('History', historySchema);
+const History = mongoose.model('History', historySchema);
+module.exports = History;

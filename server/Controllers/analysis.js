@@ -1,28 +1,19 @@
-const axios = require('axios');
 const llmService = require('../Services/llmService');
+const History = require('../Modals/history'); // Direct database access
 
 const getAnalysis = async (req, res) => {
     console.log('getAnalysis called');
     const { userId } = req.params;
     console.log('User ID:', userId);
 
-    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const historyApiUrl = `${baseUrl}/api/history/${userId}`;
-    console.log('Constructed History API URL:', historyApiUrl);
-
     try {
-        console.log('Authorization Header:', req.headers.authorization);
-        // 1. Fetch data from existing history API
-        const historyResponse = await axios.get(historyApiUrl, {
-            headers: {
-                'Authorization': req.headers.authorization
-            }
-        });
+        // 1. Fetch recent history from DB directly instead of HTTP request
+        const historyData = await History.find({ user: userId })
+            .sort({ watchedAt: -1 })
+            .limit(20)
+            .lean();
 
-        const historyData = historyResponse.data;
-        console.log('Fetched History Data:', historyData); // Log fetched data
-
-        if (!historyData || !historyData.history || historyData.history.length === 0) {
+        if (!historyData || historyData.length === 0) {
             console.log('No history data found for user.');
             return res.status(200).json({
                 "topInterests": [],
@@ -34,14 +25,14 @@ const getAnalysis = async (req, res) => {
             });
         }
 
-        // 2. Extract only useful fields (limit to 20–30 items max)
-        const recentHistory = historyData.history.slice(0, 20).map(item => ({
+        // 2. Extract only useful fields for LLM
+        const recentHistory = historyData.map(item => ({
             title: item.title,
             channelName: item.channelName,
             duration: item.duration,
             progress: item.progress,
             completed: item.completed,
-            lastWatchedAt: item.lastWatchedAt
+            lastWatchedAt: item.watchedAt
         }));
         console.log('Processed Recent History:', recentHistory);
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const cookieParser = require('cookie-parser'); 
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const http = require("http");
 const { Server: SocketServer } = require("socket.io");
@@ -25,52 +25,52 @@ class Server {
 
     console.log("5. Socket");
     this.setupSocket();
-}
-setupSocket() {
+  }
+  setupSocket() {
     console.log("Socket: before creating io");
 
-   this.io = new SocketServer(this.server, {
-    cors: {
+    this.io = new SocketServer(this.server, {
+      cors: {
         origin: [
-            "http://localhost:5173",
-            "https://yotube-full-stack.vercel.app",
-            "https://vidmo.vercel.app"
+          "http://localhost:5173",
+          "https://yotube-full-stack.vercel.app",
+          "https://vidmo.vercel.app"
         ],
         credentials: true
-    }
-});
+      }
+    });
 
-setIO(this.io);
+    setIO(this.io);
 
     console.log("Socket: after creating io");
 
     this.io.on("connection", (socket) => {
-        console.log("User Connected:", socket.id);
+      console.log("User Connected:", socket.id);
 
-        socket.on("join-video", (videoId) => {
-            socket.join(videoId);
-            console.log(`${socket.id} joined room ${videoId}`);
-        });
+      socket.on("join-video", (videoId) => {
+        socket.join(String(videoId));
+        console.log(`${socket.id} joined room ${videoId}`);
+      });
 
-        socket.on("leave-video", (videoId) => {
-            socket.leave(videoId);
-            console.log(`${socket.id} left room ${videoId}`);
-        });
+      socket.on("leave-video", (videoId) => {
+        socket.leave(videoId);
+        console.log(`${socket.id} left room ${videoId}`);
+      });
 
-        socket.on("disconnect", () => {
-            console.log("Disconnected:", socket.id);
-        });
+      socket.on("disconnect", () => {
+        console.log("Disconnected:", socket.id);
+      });
     });
 
     console.log("Socket: finished");
-}
+  }
 
   setupMiddleware() {
     this.app.use(cors({
       origin: ['http://localhost:5173', "https://yotube-full-stack.vercel.app", "https://vidmo.vercel.app"],
       credentials: true,
     }));
-    
+
     this.app.use(express.json());
     this.app.use(cookieParser());
   }
@@ -84,7 +84,7 @@ setIO(this.io);
     const videoRoutes = require('./Routes/video');
     const historyRoutes = require('./Routes/history');
     const analysisRoutes = require('./Routes/analysis');
-    
+
     this.app.use('/auth', authRoutes);
     this.app.use('/api', videoRoutes);
     this.app.use('/history', historyRoutes);
@@ -92,10 +92,10 @@ setIO(this.io);
   }
 
   start() {
-   console.log("6. Starting server");
+    console.log("6. Starting server");
 
     this.server.listen(this.port, () => {
-        console.log(`Server running on port ${this.port}`);
+      console.log(`Server running on port ${this.port}`);
     });
   }
 }

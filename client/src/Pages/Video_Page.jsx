@@ -140,7 +140,7 @@ const Video_Page = ({ SideBar }) => {
     const handleNewComment = (data) => {
       console.log("🔥 RECEIVED SOCKET EVENT (new-comment):", data);
 
-      if (data.videoId !== id) return;
+     if (String(data.videoId) !== String(id)) return;
 
       setvideo_Data((prev) => {
         if (!prev) return prev;

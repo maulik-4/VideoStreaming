@@ -195,7 +195,10 @@ class VideoController {
       });
 
       const newComment = video.comments[video.comments.length - 1];
-
+      const room = getIO().sockets.adapter.rooms.get(id);
+console.log("ROOM ID USED:", id);
+console.log("ROOM MEMBERS:", room ? [...room] : "NO ROOM / EMPTY");
+console.log("ALL ROOMS:", [...getIO().sockets.adapter.rooms.keys()]);
       // 🔥 Emit the comment to everyone watching this video
       console.log("Emitting new-comment", id);
       getIO().to(String(id)).emit("new-comment", {

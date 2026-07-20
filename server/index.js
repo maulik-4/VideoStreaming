@@ -8,22 +8,22 @@ require('dotenv').config();
 
 class Server {
   constructor() {
-    console.log("1. Constructor");
+    
 
     this.app = express();
     this.server = http.createServer(this.app);
     this.port = process.env.PORT || 9999;
 
-    console.log("2. Middleware");
+    
     this.setupMiddleware();
 
-    console.log("3. Database");
+   
     this.setupDatabase();
 
-    console.log("4. Routes");
+    
     this.setupRoutes();
 
-    console.log("5. Socket");
+    
     this.setupSocket();
   }
   setupSocket() {
@@ -92,7 +92,7 @@ class Server {
   }
 
   start() {
-    console.log("6. Starting server");
+    console.log("Starting server");
 
     this.server.listen(this.port, () => {
       console.log(`Server running on port ${this.port}`);

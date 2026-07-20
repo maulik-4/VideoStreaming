@@ -34,7 +34,7 @@ const getAnalysis = async (req, res) => {
             completed: item.completed,
             lastWatchedAt: item.watchedAt
         }));
-        console.log('Processed Recent History:', recentHistory);
+        console.log(JSON.stringify(recentHistory, null, 2));
 
         // 3. Build a structured prompt for LLM
         const prompt = llmService.buildAnalysisPrompt(recentHistory);

@@ -87,7 +87,7 @@ const Video_Page = ({ SideBar }) => {
 
     }
   }
-
+  console
   // useEffect hooks remain the same
   useEffect(() => {
     axiosInstance.get(`/api/getAllVideos/${id}`)
@@ -119,7 +119,6 @@ const Video_Page = ({ SideBar }) => {
     if (!id) return;
 
     const handleJoin = () => {
-      console.log(`Joining socket room for video: ${id}`);
       socket.emit("join-video", id);
     };
 
@@ -138,7 +137,7 @@ const Video_Page = ({ SideBar }) => {
   }, [id]);
   useEffect(() => {
     const handleNewComment = (data) => {
-      console.log("🔥 RECEIVED SOCKET EVENT (new-comment):", data);
+      
 
      if (String(data.videoId) !== String(id)) return;
 
@@ -152,7 +151,7 @@ const Video_Page = ({ SideBar }) => {
     };
 
     const handleEditComment = (data) => {
-      console.log("🔥 RECEIVED SOCKET EVENT (edit-comment):", data);
+     
       
       if (data.videoId !== id) return;
 

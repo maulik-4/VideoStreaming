@@ -64,7 +64,7 @@ class VideoController {
               
 
                 if (cachedVideos) {
-                    return res.status(200).json({
+                    res.status(200).json({
                         message: "Videos fetched successfully",
                         success: "yes",
                         data: JSON.parse(cachedVideos),

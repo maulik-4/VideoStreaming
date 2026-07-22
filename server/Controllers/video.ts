@@ -42,12 +42,14 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
+
     public getAllVideos = async (
         req: Request,
         res: Response
@@ -55,13 +57,8 @@ class VideoController {
         const CACHE_KEY = "home:videos";
 
         try {
-           
             try {
-               
-
                 const cachedVideos = await redisClient.get(CACHE_KEY);
-
-              
 
                 if (cachedVideos) {
                     res.status(200).json({
@@ -69,12 +66,14 @@ class VideoController {
                         success: "yes",
                         data: JSON.parse(cachedVideos),
                     });
+                    // IMPORTANT: stop here on a cache hit, otherwise
+                    // execution falls through to the Mongo fetch below
+                    // and sends a second response -> ERR_HTTP_HEADERS_SENT
+                    return;
                 }
             } catch (redisError) {
                 console.log("Redis GET Error:", redisError);
             }
-
-           
 
             const videos = await Video.find()
                 .populate(
@@ -83,40 +82,31 @@ class VideoController {
                 )
                 .lean();
 
-           
-
             try {
-                
-
-               
-                    await redisClient.set(
-                        CACHE_KEY,
-                        JSON.stringify(videos),
-                        { EX: 300 }
-                    );
-               
-
-            
+                await redisClient.set(
+                    CACHE_KEY,
+                    JSON.stringify(videos),
+                    { EX: 300 }
+                );
             } catch (redisError) {
                 console.log("Redis SET Error:", redisError);
             }
-
-           
 
             res.status(200).json({
                 message: "Videos fetched successfully",
                 success: "yes",
                 data: videos,
             });
-
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
+
     public getVideoById = async (
         req: Request,
         res: Response
@@ -149,12 +139,14 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
+
     public getAllvideosById = async (
         req: Request,
         res: Response
@@ -183,10 +175,11 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
 
@@ -220,10 +213,11 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
 
@@ -257,10 +251,11 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
 
@@ -294,12 +289,14 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Internal server error",
+                });
+            }
         }
     };
+
     public addComment = async (
         req: Request,
         res: Response
@@ -346,15 +343,6 @@ class VideoController {
             const newComment =
                 video.comments[video.comments.length - 1];
 
-            const room = getIO().sockets.adapter.rooms.get(
-                String(id)
-            );
-
-           
-            
-
-           
-
             getIO()
                 .to(String(id))
                 .emit("new-comment", {
@@ -368,12 +356,14 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Failed to add comment",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Failed to add comment",
+                });
+            }
         }
     };
+
     public editComment = async (
         req: Request,
         res: Response
@@ -442,10 +432,11 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Failed to edit comment",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Failed to edit comment",
+                });
+            }
         }
     };
 
@@ -508,12 +499,14 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Failed to update video",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Failed to update video",
+                });
+            }
         }
     };
+
     public searchVideos = async (
         req: Request,
         res: Response
@@ -607,10 +600,11 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
-
-            res.status(500).json({
-                message: "Search failed",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    message: "Search failed",
+                });
+            }
         }
     };
 }

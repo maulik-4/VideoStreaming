@@ -6,7 +6,7 @@ const socket2 = io("http://localhost:9999");
 const videoId = "test-video-123";
 
 socket1.on("connect", () => {
-    console.log("Socket 1 connected:", socket1.id);
+  
     socket1.emit("join-video", videoId);
 });
 

@@ -1,19 +1,45 @@
-const Groq = require('groq-sdk');
+import Groq from "groq-sdk";
 
-const getLLMAnalysis = async (prompt) => {
+type HistoryItem = {
+    title: string;
+    channelName: string;
+    duration: number;
+    progress: number;
+    completed: boolean;
+    lastWatchedAt: Date | string;
+};
+
+type AnalysisResponse = {
+    topInterests: string[];
+    learningPattern: string;
+    consistency: string;
+    engagementLevel: string;
+    recommendedTopics: string[];
+    summary: string;
+};
+
+export const getLLMAnalysis = async (
+    prompt: string
+): Promise<AnalysisResponse> => {
     const apiKey = process.env.GROQ_API_KEY;
+
     if (!apiKey) {
-        throw new Error('GROQ_API_KEY is not set in environment variables.');
+        throw new Error(
+            "GROQ_API_KEY is not set in environment variables."
+        );
     }
 
-    const groq = new Groq({ apiKey });
+    const groq = new Groq({
+        apiKey,
+    });
 
     try {
-        const chatCompletion = await groq.chat.completions.create({
-            messages: [
-                {
-                    role: 'system',
-                    content: `
+        const chatCompletion =
+            await groq.chat.completions.create({
+                messages: [
+                    {
+                        role: "system",
+                        content: `
 You are an expert user behavior analyst for a video streaming platform.
 
 Your job is to analyze a user's watch history and generate personalized insights.
@@ -92,36 +118,63 @@ Return EXACTLY this JSON schema:
   "recommendedTopics": [],
   "summary": ""
 }
-`
+`,
+                    },
+                    {
+                        role: "user",
+                        content: prompt,
+                    },
+                ],
+
+                model:
+                    "llama-3.3-70b-versatile",
+
+                response_format: {
+                    type: "json_object",
                 },
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ],
-            model: "llama-3.3-70b-versatile",
-            response_format: { type: 'json_object' },
-        });
+            });
 
-        // Clean and parse LLM JSON response safely
-        const rawContent = chatCompletion.choices[0].message.content;
-        return JSON.parse(rawContent);
+        const rawContent =
+            chatCompletion.choices[0].message
+                .content;
 
+        if (!rawContent) {
+            throw new Error(
+                "LLM returned an empty response."
+            );
+        }
+
+        return JSON.parse(
+            rawContent
+        ) as AnalysisResponse;
     } catch (error) {
-        console.error('Error calling LLM API:', error);
-        throw new Error('Failed to get analysis from LLM.');
+        console.error(
+            "Error calling LLM API:",
+            error
+        );
+
+        throw new Error(
+            "Failed to get analysis from LLM."
+        );
     }
 };
 
-const buildAnalysisPrompt = (history) => {
-    const history_json = JSON.stringify(history, null, 2);
+export const buildAnalysisPrompt = (
+    history: HistoryItem[]
+): string => {
+    const historyJson = JSON.stringify(
+        history,
+        null,
+        2
+    );
+
     return `Analyze this watch history data:
 
-${history_json}
+${historyJson}
 `;
 };
 
-module.exports = {
+export default {
     getLLMAnalysis,
-    buildAnalysisPrompt
+    buildAnalysisPrompt,
 };

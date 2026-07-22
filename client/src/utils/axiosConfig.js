@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Prefer env override (Vite) so we can point to staging/local easily
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://yotube-full-stack.onrender.com';
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const axiosInstance = axios.create({
   baseURL,

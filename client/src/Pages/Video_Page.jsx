@@ -130,7 +130,7 @@ const Video_Page = ({ SideBar }) => {
     socket.on("connect", handleJoin);
 
     return () => {
-      console.log(`Leaving socket room for video: ${id}`);
+     
       socket.emit("leave-video", id);
       socket.off("connect", handleJoin);
     };

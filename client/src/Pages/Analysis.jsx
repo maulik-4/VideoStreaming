@@ -19,7 +19,7 @@ const Analysis = () => {
             try {
                 setLoading(true);
                 const response = await axios.get(`/api/analysis/${userId}`);
-                console.log('AI Response:', response.data);
+             
                 setAnalysis(response.data); 
                 setError(null);
             } catch (err) {

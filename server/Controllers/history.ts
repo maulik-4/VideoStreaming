@@ -4,13 +4,15 @@ import History from "../Modals/history";
 import Video from "../Modals/video";
 import type { UserDocument } from "../Modals/user";
 import youtubeService from "../utils/youtubeService";
+import { prisma } from "../Connection/Prisma";
+import { Prisma } from "@prisma/client";
 
 export const saveHistory = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id;
 
         const {
             videoId,
@@ -78,16 +80,16 @@ export const saveHistory = async (
                 return;
             }
 
-          videoData = {
-    title: video.title,
-    thumbnail: video.thumbnail,
-    channelName:
-        (video.user as unknown as UserDocument)?.channelName ??
-        "Unknown",
-    uploadedBy:
-        (video.user as unknown as UserDocument)._id,
-    duration: duration ?? 0,
-};
+            videoData = {
+                title: video.title,
+                thumbnail: video.thumbnail,
+                channelName:
+                    (video.user as unknown as UserDocument)?.channelName ??
+                    "Unknown",
+                uploadedBy:
+                    (video.user as unknown as UserDocument)._id,
+                duration: duration ?? 0,
+            };
         } else {
             if (
                 title &&
@@ -223,9 +225,9 @@ export const getHistory = async (
 
         const platformFilter =
             req.query.platform as
-                | "local"
-                | "youtube"
-                | undefined;
+            | "local"
+            | "youtube"
+            | undefined;
 
         const maxLimit = 100;
         const validLimit = Math.min(limit, maxLimit);
@@ -270,13 +272,13 @@ export const getHistory = async (
                 watchPercentage:
                     item.duration > 0
                         ? Math.min(
-                              100,
-                              Math.round(
-                                  (item.progress /
-                                      item.duration) *
-                                      100
-                              )
-                          )
+                            100,
+                            Math.round(
+                                (item.progress /
+                                    item.duration) *
+                                100
+                            )
+                        )
                         : 0,
             })
         );
@@ -581,7 +583,7 @@ export const getHistoryAnalytics = async (
                             $limit: 20,
                         },
                     ],
-                                        perCategory: [
+                    perCategory: [
                         {
                             $group: {
                                 _id: "$category",

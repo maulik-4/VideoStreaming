@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+
+  channelName String
+  userName    String @unique
+  password    String
+  about       String
+  profilePic  String @default("https://via.placeholder.com/150")
+
+  role Role @default(USER)
+
+  isBlocked Boolean @default(false)
+
+  subscribersCount Int @default(0)
+
+  videos   Video[]
+  comments Comment[]
+
+  history History[] @relation("UserHistory")
+
+  uploadedHistory History[] @relation("UploadedHistory")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userName])
+  @@index([createdAt])
+}
+
+model Video {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+
+  videoLink String
+  thumbnail String
+
+  category String @default("All")
+
+  likes   Int @default(0)
+  dislike Int @default(0)
+
+  views Int @default(0)
+
+  comments Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model Comment {
+  id String @id @default(uuid()) @db.Uuid
+
+  text String
+
+  edited Boolean @default(false)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  videoId String @db.Uuid
+  video   Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([videoId])
+  @@index([userId])
+}
+
+enum PlatformType {
+  local
+  youtube
+}
+
+model History {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation("UserHistory", fields: [userId], references: [id], onDelete: Cascade)
+
+  platform PlatformType @default(local)
+
+  videoId String
+
+  title String
+
+  thumbnail String
+
+  channelName String
+
+  uploadedById String? @db.Uuid
+  uploadedBy   User?   @relation("UploadedHistory", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  progress Int @default(0)
+
+  duration Int @default(0)
+
+  firstWatchedAt DateTime @default(now())
+
+  watchedAt DateTime @default(now())
+
+  completed Boolean @default(false)
+
+  watchCount Int @default(1)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, videoId, platform])
+  @@index([userId])
+  @@index([watchedAt])
+  @@index([userId, watchedAt])
+}

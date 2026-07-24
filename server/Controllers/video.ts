@@ -4,6 +4,10 @@ import Video from "../Modals/video";
 import redisClient from "../Redis/redisClient";
 import { getIO } from "../Socket/socket";
 
+
+// Add
+import { prisma } from "../Connection/Prisma";
+
 class VideoController {
     constructor() { }
 
@@ -20,16 +24,26 @@ class VideoController {
                 thumbnail,
             } = req.body;
 
-            const videoUpload = new Video({
-                user: req.user._id,
-                title,
-                description,
-                videoLink,
-                category,
-                thumbnail,
+            const video = await prisma.video.create({
+                data: {
+                    userId: req.user.id,
+                    title,
+                    description,
+                    videoLink,
+                    category,
+                    thumbnail,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                        },
+                    },
+                },
             });
-
-            await videoUpload.save();
 
             await redisClient
                 .del("home:videos")
@@ -38,10 +52,11 @@ class VideoController {
             res.status(201).json({
                 message: "Video uploaded successfully",
                 success: "yes",
-                data: videoUpload,
+                data: video,
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -66,27 +81,36 @@ class VideoController {
                         success: "yes",
                         data: JSON.parse(cachedVideos),
                     });
-                    // IMPORTANT: stop here on a cache hit, otherwise
-                    // execution falls through to the Mongo fetch below
-                    // and sends a second response -> ERR_HTTP_HEADERS_SENT
                     return;
                 }
             } catch (redisError) {
                 console.log("Redis GET Error:", redisError);
             }
 
-            const videos = await Video.find()
-                .populate(
-                    "user",
-                    "userName channelName profilePic isBlocked"
-                )
-                .lean();
+            const videos = await prisma.video.findMany({
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                            isBlocked: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+            });
 
             try {
                 await redisClient.set(
                     CACHE_KEY,
                     JSON.stringify(videos),
-                    { EX: 300 }
+                    {
+                        EX: 300,
+                    }
                 );
             } catch (redisError) {
                 console.log("Redis SET Error:", redisError);
@@ -99,6 +123,7 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -114,18 +139,38 @@ class VideoController {
         try {
             const { id } = req.params;
 
-            const videoData = await Video.findById(id)
-                .populate(
-                    "user",
-                    "userName channelName profilePic"
-                )
-                .populate({
-                    path: "comments.user",
-                    select:
-                        "userName channelName profilePic",
-                });
+            const video = await prisma.video.findUnique({
+                where: {
+                    id,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                        },
+                    },
+                    comments: {
+                        orderBy: {
+                            createdAt: "desc",
+                        },
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    userName: true,
+                                    channelName: true,
+                                    profilePic: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
 
-            if (!videoData) {
+            if (!video) {
                 res.status(404).json({
                     message: "Video not found",
                 });
@@ -135,10 +180,11 @@ class VideoController {
             res.status(200).json({
                 message: "Video fetched successfully",
                 success: "yes",
-                data: videoData,
+                data: video,
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -147,6 +193,8 @@ class VideoController {
         }
     };
 
+
+
     public getAllvideosById = async (
         req: Request,
         res: Response
@@ -154,19 +202,24 @@ class VideoController {
         try {
             const { id } = req.params;
 
-            const videos = await Video.find({
-                user: id,
-            }).populate(
-                "user",
-                "userName channelName profilePic"
-            );
-
-            if (!videos) {
-                res.status(404).json({
-                    message: "Videos not found",
-                });
-                return;
-            }
+            const videos = await prisma.video.findMany({
+                where: {
+                    userId: id,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+            });
 
             res.status(200).json({
                 message: "Videos fetched successfully",
@@ -175,6 +228,7 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -190,18 +244,19 @@ class VideoController {
         try {
             const { id } = req.params;
 
-            const videoData = await Video.findById(id);
-
-            if (!videoData) {
-                res.status(404).json({
-                    message: "Video not found",
-                });
-                return;
-            }
-
-            videoData.likes += 1;
-
-            const updatedVideo = await videoData.save();
+            const updatedVideo = await prisma.video.update({
+                where: {
+                    id,
+                },
+                data: {
+                    likes: {
+                        increment: 1,
+                    },
+                },
+                select: {
+                    likes: true,
+                },
+            });
 
             await redisClient
                 .del("home:videos")
@@ -213,6 +268,7 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -220,7 +276,6 @@ class VideoController {
             }
         }
     };
-
     public updateDislikes = async (
         req: Request,
         res: Response
@@ -228,18 +283,19 @@ class VideoController {
         try {
             const { id } = req.params;
 
-            const videoData = await Video.findById(id);
-
-            if (!videoData) {
-                res.status(404).json({
-                    message: "Video not found",
-                });
-                return;
-            }
-
-            videoData.dislike += 1;
-
-            const updatedVideo = await videoData.save();
+            const updatedVideo = await prisma.video.update({
+                where: {
+                    id,
+                },
+                data: {
+                    dislike: {
+                        increment: 1,
+                    },
+                },
+                select: {
+                    dislike: true,
+                },
+            });
 
             await redisClient
                 .del("home:videos")
@@ -251,6 +307,7 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -266,18 +323,19 @@ class VideoController {
         try {
             const { id } = req.params;
 
-            const videoData = await Video.findById(id);
-
-            if (!videoData) {
-                res.status(404).json({
-                    message: "Video not found",
-                });
-                return;
-            }
-
-            videoData.views += 1;
-
-            const updatedVideo = await videoData.save();
+            const updatedVideo = await prisma.video.update({
+                where: {
+                    id,
+                },
+                data: {
+                    views: {
+                        increment: 1,
+                    },
+                },
+                select: {
+                    views: true,
+                },
+            });
 
             await redisClient
                 .del("home:videos")
@@ -289,6 +347,7 @@ class VideoController {
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Internal server error",
@@ -312,7 +371,14 @@ class VideoController {
                 return;
             }
 
-            const video = await Video.findById(id);
+            const video = await prisma.video.findUnique({
+                where: {
+                    id,
+                },
+                select: {
+                    id: true,
+                },
+            });
 
             if (!video) {
                 res.status(404).json({
@@ -321,41 +387,42 @@ class VideoController {
                 return;
             }
 
-            const comment = {
-                user: req.user._id,
-                text,
-            };
-
-            video.comments.push(comment);
-
-            await video.save();
+            const comment = await prisma.comment.create({
+                data: {
+                    text: text.trim(),
+                    userId: req.user.id,
+                    videoId: id,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                        },
+                    },
+                },
+            });
 
             await redisClient
                 .del("home:videos")
                 .catch(() => { });
 
-            await video.populate({
-                path: "comments.user",
-                select:
-                    "userName channelName profilePic",
-            });
-
-            const newComment =
-                video.comments[video.comments.length - 1];
-
             getIO()
-                .to(String(id))
+                .to(id)
                 .emit("new-comment", {
-                    videoId: String(id),
-                    comment: newComment,
+                    videoId: id,
+                    comment,
                 });
 
             res.status(201).json({
                 message: "Comment added",
-                comment: newComment,
+                comment,
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Failed to add comment",
@@ -369,8 +436,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const videoId = req.params.videoId as string;
-            const commentId = req.params.commentId as string;
+            const { videoId, commentId } = req.params;
             const { text } = req.body;
 
             if (!text || !text.trim()) {
@@ -380,16 +446,14 @@ class VideoController {
                 return;
             }
 
-            const video = await Video.findById(videoId);
-
-            if (!video) {
-                res.status(404).json({
-                    message: "Video not found",
-                });
-                return;
-            }
-
-            const comment = video.comments.id(commentId);
+            const comment = await prisma.comment.findUnique({
+                where: {
+                    id: commentId,
+                },
+                include: {
+                    user: true,
+                },
+            });
 
             if (!comment) {
                 res.status(404).json({
@@ -398,20 +462,42 @@ class VideoController {
                 return;
             }
 
-            if (
-                comment.user.toString() !==
-                req.user._id.toString()
-            ) {
+            if (comment.videoId !== videoId) {
+                res.status(400).json({
+                    message: "Invalid comment",
+                });
+                return;
+            }
+
+            const isOwner = comment.userId === req.user.id;
+            const isAdmin = req.user.role === "admin";
+
+            if (!isOwner && !isAdmin) {
                 res.status(403).json({
                     message: "Not allowed",
                 });
                 return;
             }
 
-            comment.text = text;
-            comment.edited = true;
-
-            await video.save();
+            const updatedComment = await prisma.comment.update({
+                where: {
+                    id: commentId,
+                },
+                data: {
+                    text: text.trim(),
+                    edited: true,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                        },
+                    },
+                },
+            });
 
             await redisClient
                 .del("home:videos")
@@ -422,16 +508,17 @@ class VideoController {
                 .emit("edit-comment", {
                     videoId,
                     commentId,
-                    text,
+                    text: updatedComment.text,
                     edited: true,
                 });
 
             res.status(200).json({
                 message: "Comment updated",
-                comment,
+                comment: updatedComment,
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Failed to edit comment",
@@ -439,7 +526,6 @@ class VideoController {
             }
         }
     };
-
     public editVideo = async (
         req: Request,
         res: Response
@@ -452,7 +538,15 @@ class VideoController {
                 category,
             } = req.body;
 
-            const video = await Video.findById(id);
+            const video = await prisma.video.findUnique({
+                where: {
+                    id,
+                },
+                select: {
+                    id: true,
+                    userId: true,
+                },
+            });
 
             if (!video) {
                 res.status(404).json({
@@ -461,12 +555,8 @@ class VideoController {
                 return;
             }
 
-            const isOwner =
-                video.user.toString() ===
-                req.user._id.toString();
-
-            const isAdmin =
-                req.user.role === "admin";
+            const isOwner = video.userId === req.user.id;
+            const isAdmin = req.user.role === "admin";
 
             if (!isOwner && !isAdmin) {
                 res.status(403).json({
@@ -475,19 +565,26 @@ class VideoController {
                 return;
             }
 
-            if (title) {
-                video.title = title;
-            }
-
-            if (description) {
-                video.description = description;
-            }
-
-            if (category) {
-                video.category = category;
-            }
-
-            await video.save();
+            const updatedVideo = await prisma.video.update({
+                where: {
+                    id,
+                },
+                data: {
+                    ...(title && { title }),
+                    ...(description && { description }),
+                    ...(category && { category }),
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                        },
+                    },
+                },
+            });
 
             await redisClient
                 .del("home:videos")
@@ -495,10 +592,11 @@ class VideoController {
 
             res.status(200).json({
                 message: "Video updated",
-                data: video,
+                data: updatedVideo,
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Failed to update video",
@@ -514,11 +612,7 @@ class VideoController {
         try {
             const { q } = req.query;
 
-            if (
-                !q ||
-                typeof q !== "string" ||
-                !q.trim()
-            ) {
+            if (!q || typeof q !== "string" || !q.trim()) {
                 res.status(400).json({
                     message: "Search query is required",
                 });
@@ -535,8 +629,7 @@ class VideoController {
 
                 if (cachedResults) {
                     res.status(200).json({
-                        message:
-                            "Search results fetched successfully",
+                        message: "Search results fetched successfully",
                         success: "yes",
                         data: JSON.parse(cachedResults),
                     });
@@ -549,33 +642,44 @@ class VideoController {
                 );
             }
 
-            const videos = await Video.find({
-                $or: [
-                    {
-                        title: {
-                            $regex: searchQuery,
-                            $options: "i",
+            const videos = await prisma.video.findMany({
+                where: {
+                    OR: [
+                        {
+                            title: {
+                                contains: searchQuery,
+                                mode: "insensitive",
+                            },
+                        },
+                        {
+                            description: {
+                                contains: searchQuery,
+                                mode: "insensitive",
+                            },
+                        },
+                        {
+                            category: {
+                                contains: searchQuery,
+                                mode: "insensitive",
+                            },
+                        },
+                    ],
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            userName: true,
+                            channelName: true,
+                            profilePic: true,
+                            isBlocked: true,
                         },
                     },
-                    {
-                        description: {
-                            $regex: searchQuery,
-                            $options: "i",
-                        },
-                    },
-                    {
-                        category: {
-                            $regex: searchQuery,
-                            $options: "i",
-                        },
-                    },
-                ],
-            })
-                .populate(
-                    "user",
-                    "userName channelName profilePic isBlocked"
-                )
-                .lean();
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+            });
 
             try {
                 await redisClient.set(
@@ -593,13 +697,13 @@ class VideoController {
             }
 
             res.status(200).json({
-                message:
-                    "Search results fetched successfully",
+                message: "Search results fetched successfully",
                 success: "yes",
                 data: videos,
             });
         } catch (error) {
             console.error(error);
+
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Search failed",

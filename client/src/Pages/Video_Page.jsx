@@ -97,7 +97,7 @@ const Video_Page = ({ SideBar }) => {
         setEditTitle(data.title || '');
         setEditDescription(data.description || '');
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        setSubscribed((currentUser.subscriptions || []).includes(data.user?._id));
+        setSubscribed((currentUser.subscriptions || []).includes(data.user?.id));
         HandleViews();
 
         // Load resume time from history
@@ -160,7 +160,7 @@ const Video_Page = ({ SideBar }) => {
         return {
           ...prev,
           comments: (prev.comments || []).map(c => 
-            c._id === data.commentId 
+            c.id === data.commentId 
               ? { ...c, text: data.text, edited: data.edited } 
               : c
           ),
@@ -196,7 +196,7 @@ const Video_Page = ({ SideBar }) => {
   }
 };
   const startEditComment = (c) => {
-    setEditingCommentId(c._id);
+    setEditingCommentId(c.id);
     setEditingCommentText(c.text);
   };
 
@@ -234,11 +234,11 @@ const Video_Page = ({ SideBar }) => {
       const token = localStorage.getItem('token');
       if (!token) return toast.error('Please login to subscribe');
       if (subscribed) {
-        await axiosInstance.post(`/auth/unsubscribe/${video_Data.user._id}`);
+        await axiosInstance.post(`/auth/unsubscribe/${video_Data.user.id}`);
         setSubscribed(false);
         toast.success('Unsubscribed');
       } else {
-        await axiosInstance.post(`/auth/subscribe/${video_Data.user._id}`);
+        await axiosInstance.post(`/auth/subscribe/${video_Data.user.id}`);
         setSubscribed(true);
         toast.success('Subscribed');
       }
@@ -391,7 +391,7 @@ const Video_Page = ({ SideBar }) => {
               {/* Channel and interaction buttons */}
               <div className="flex justify-between items-center flex-wrap gap-4 border-t border-b border-gray-700/50 py-4">
                 <div
-                  onClick={() => navigate(`/profile/${video_Data?.user?._id}`)}
+                  onClick={() => navigate(`/profile/${video_Data?.user?.id}`)}
                   className="flex items-center gap-3 cursor-pointer"
                 >
                   <img
@@ -443,7 +443,7 @@ const Video_Page = ({ SideBar }) => {
 
               {/* Edit Video (owner) */}
               <div className="mt-4">
-                {video_Data?.user && JSON.parse(localStorage.getItem('user') || '{}')._id === video_Data.user._id && (
+                {video_Data?.user && JSON.parse(localStorage.getItem('user') || '{}').id === video_Data.user.id && (
                   <div className="flex items-center gap-3">
                     {!isEditingVideo ? (
                       <button onClick={toggleEditVideo} className="px-4 py-2 accent-btn rounded-lg">Edit Video</button>
@@ -478,7 +478,7 @@ const Video_Page = ({ SideBar }) => {
     .slice()
     .reverse()
     .map((c) => (
-      <div key={c._id} className="p-3 glass-card rounded">
+      <div key={c.id} className="p-3 glass-card rounded">
         <div className="flex items-start gap-3">
           <img
             src={c.user?.profilePic || "https://via.placeholder.com/40"}
@@ -498,8 +498,8 @@ const Video_Page = ({ SideBar }) => {
                 </div>
               </div>
 
-              {JSON.parse(localStorage.getItem("user") || "{}")._id ===
-                c.user?._id && (
+              {JSON.parse(localStorage.getItem("user") || "{}").id ===
+                c.user?.id && (
                 <button
                   onClick={() => startEditComment(c)}
                   className="text-sm text-blue-300"
@@ -510,7 +510,7 @@ const Video_Page = ({ SideBar }) => {
             </div>
 
             <div className="mt-2">
-              {editingCommentId === c._id ? (
+              {editingCommentId === c.id ? (
                 <>
                   <textarea
                     value={editingCommentText}
@@ -558,9 +558,9 @@ const Video_Page = ({ SideBar }) => {
             <div className="flex flex-col gap-4">
               {videos.map((video) => (
                 <div
-                  key={video._id}
+                  key={video.id}
                   className="transition-colors duration-300 rounded-lg overflow-hidden shadow-md cursor-pointer glass-card"
-                  onClick={() => navigate(`/watch/${video._id}`)}
+                  onClick={() => navigate(`/watch/${video.id}`)}
                 >
                   <div className="flex flex-col">
                     <img

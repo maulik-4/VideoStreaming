@@ -71,7 +71,7 @@ const Profile = ({ SideBar }) => {
                 key={index}
                 className="video_card p-4 rounded-xl shadow-lg transition-all duration-300 glass-card"
               >
-                <div onClick={() => navigate(`/watch/${video._id}`)} className="cursor-pointer">
+                <div onClick={() => navigate(`/watch/${video.id}`)} className="cursor-pointer">
                   <div
                     className="video_thumbnail w-full h-40 rounded-lg mb-3 overflow-hidden"
                     style={{
@@ -88,12 +88,12 @@ const Profile = ({ SideBar }) => {
                   </div>
                 </div>
 
-                {user && user._id === video.user._id && (
+                {user && user.id === video.user.id && (
                   <div className="mt-3 flex gap-2">
                     <button
                       className="px-3 py-1 border border-soft rounded"
                       onClick={() => {
-                        setEditingId(video._id);
+                        setEditingId(video.id);
                         setEditTitle(video.title || '');
                         setEditDescription(video.description || '');
                         setEditCategory(video.category || '');
@@ -103,14 +103,14 @@ const Profile = ({ SideBar }) => {
                     </button>
                     <button
                       className="px-3 py-1 accent-btn rounded"
-                      onClick={() => navigate(`/watch/${video._id}`)}
+                      onClick={() => navigate(`/watch/${video.id}`)}
                     >
                       Open
                     </button>
                   </div>
                 )}
 
-                {editingId === video._id && (
+                {editingId === video.id && (
                   <div className="mt-3 glass-card p-3 rounded space-y-2">
                     <input
                       value={editTitle}
@@ -136,7 +136,7 @@ const Profile = ({ SideBar }) => {
                         className="px-3 py-1 accent-btn rounded"
                         onClick={async () => {
                           try {
-                            await axiosInstance.put(`/api/${video._id}`, {
+                            await axiosInstance.put(`/api/${video.id}`, {
                               title: editTitle,
                               description: editDescription,
                               category: editCategory,

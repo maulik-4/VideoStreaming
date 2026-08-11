@@ -143,7 +143,7 @@ const Search = ({ SideBar }) => {
             <p className="text-muted text-sm mb-4">{filtered.length} local video{filtered.length !== 1 ? 's' : ''} found</p>
             <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filtered.map((video) => (
-                <VideoCard key={video._id} video={video} navigate={navigate} />
+                <VideoCard key={video.id} video={video} navigate={navigate} />
               ))}
             </div>
           </>

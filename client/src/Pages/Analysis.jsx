@@ -6,7 +6,7 @@ const Analysis = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
-    const userId = user?._id;
+    const userId = user?.id;
 
     useEffect(() => {
         if (!userId) {

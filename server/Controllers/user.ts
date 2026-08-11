@@ -2,10 +2,7 @@ import { Request, Response } from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
-
-import User from "../Modals/user";
-import Video from "../Modals/video";
+import { Role } from "@prisma/client";
 import { prisma } from "../Connection/Prisma";
 
 dotenv.config();
@@ -205,7 +202,7 @@ class UserController {
         try {
             const user = await prisma.user.update({
                 where: {
-                    id: req.params.id,
+                    id: req.params.id as string,
                 },
                 data: {
                     isBlocked: true,
@@ -231,7 +228,7 @@ class UserController {
         try {
             const user = await prisma.user.update({
                 where: {
-                    id: req.params.id,
+                    id: req.params.id as string,
                 },
                 data: {
                     isBlocked: false,
@@ -259,17 +256,19 @@ class UserController {
 
             const currentUser = req.user;
 
-            if (currentUser._id.equals(targetId)) {
+            if (currentUser.id === targetId) {
                 res.status(400).json({
                     message: "Cannot subscribe to yourself",
                 });
                 return;
             }
 
-            const alreadySubscribed =
-                currentUser.subscriptions?.find(
-                    (id) => id.toString() === targetId
-                );
+            const dbUser = await prisma.user.findUnique({
+                where: { id: currentUser.id },
+                include: { subscriptions: true }
+            });
+
+            const alreadySubscribed = dbUser?.subscriptions.some(sub => sub.id === targetId);
 
             if (alreadySubscribed) {
                 res.status(400).json({
@@ -278,27 +277,26 @@ class UserController {
                 return;
             }
 
-            currentUser.subscriptions =
-                currentUser.subscriptions || [];
+            await prisma.user.update({
+                where: { id: currentUser.id },
+                data: {
+                    subscriptions: {
+                        connect: { id: targetId }
+                    }
+                }
+            });
 
-            currentUser.subscriptions.push(
-                new Types.ObjectId(targetId)
-            );
-
-            await currentUser.save();
-
-            const targetUser = await User.findById(targetId);
-
-            if (targetUser) {
-                targetUser.subscribersCount++;
-
-                await targetUser.save();
-            }
+            await prisma.user.update({
+                where: { id: targetId },
+                data: {
+                    subscribersCount: { increment: 1 }
+                }
+            });
 
             res.status(200).json({
                 message: "Subscribed",
             });
-        } catch {
+        } catch (error) {
             res.status(500).json({
                 message: "Failed to subscribe",
             });
@@ -310,32 +308,33 @@ class UserController {
         res: Response
     ): Promise<void> => {
         try {
-            const targetId = req.params.id;
-
+            const targetId = req.params.id as string;
             const currentUser = req.user;
 
-            currentUser.subscriptions =
-                currentUser.subscriptions.filter(
-                    (id) => id.toString() !== targetId
-                );
+            await prisma.user.update({
+                where: { id: currentUser.id },
+                data: {
+                    subscriptions: {
+                        disconnect: { id: targetId }
+                    }
+                }
+            });
 
-            await currentUser.save();
+            const targetUser = await prisma.user.findUnique({ where: { id: targetId } });
 
-            const targetUser = await User.findById(targetId);
-
-            if (targetUser) {
-                targetUser.subscribersCount = Math.max(
-                    0,
-                    targetUser.subscribersCount - 1
-                );
-
-                await targetUser.save();
+            if (targetUser && targetUser.subscribersCount > 0) {
+                await prisma.user.update({
+                    where: { id: targetId },
+                    data: {
+                        subscribersCount: { decrement: 1 }
+                    }
+                });
             }
 
             res.status(200).json({
                 message: "Unsubscribed",
             });
-        } catch {
+        } catch (error) {
             res.status(500).json({
                 message: "Failed to unsubscribe",
             });
@@ -347,23 +346,33 @@ class UserController {
         res: Response
     ): Promise<void> => {
         try {
-            const subscriptions =
-                req.user.subscriptions || [];
+            const dbUser = await prisma.user.findUnique({
+                where: { id: req.user.id },
+                include: { subscriptions: true }
+            });
 
-            const videos = await Video.find({
-                user: {
-                    $in: subscriptions,
+            const subscriptionIds = dbUser?.subscriptions.map(sub => sub.id) || [];
+
+            const videos = await prisma.video.findMany({
+                where: {
+                    userId: { in: subscriptionIds }
                 },
-            }).populate(
-                "user",
-                "userName channelName profilePic"
-            );
+                include: {
+                    user: {
+                        select: {
+                            userName: true,
+                            channelName: true,
+                            profilePic: true
+                        }
+                    }
+                }
+            });
 
             res.status(200).json({
                 success: "yes",
                 data: videos,
             });
-        } catch {
+        } catch (error) {
             res.status(500).json({
                 message:
                     "Failed to fetch subscriptions videos",
@@ -376,8 +385,12 @@ class UserController {
         res: Response
     ): Promise<void> => {
         try {
-            const subscriptions =
-                req.user.subscriptions || [];
+            const dbUser = await prisma.user.findUnique({
+                where: { id: req.user.id },
+                include: { subscriptions: true }
+            });
+
+            const subscriptions = dbUser?.subscriptions || [];
 
             if (!subscriptions.length) {
                 res.status(200).json({
@@ -387,21 +400,24 @@ class UserController {
                 return;
             }
 
-            const users = await User.find({
-                _id: {
-                    $in: subscriptions,
+            const users = await prisma.user.findMany({
+                where: {
+                    id: { in: subscriptions.map(sub => sub.id) }
                 },
-            })
-                .select(
-                    "_id channelName userName profilePic subscribersCount"
-                )
-                .lean();
+                select: {
+                    id: true,
+                    channelName: true,
+                    userName: true,
+                    profilePic: true,
+                    subscribersCount: true
+                }
+            });
 
             res.status(200).json({
                 success: "yes",
                 data: users,
             });
-        } catch {
+        } catch (error) {
             res.status(500).json({
                 message:
                     "Failed to fetch subscriptions list",
@@ -414,38 +430,27 @@ class UserController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
 
             const { role } = req.body;
 
-            if (
-                role !== "user" &&
-                role !== "admin"
-            ) {
+            if (role !== "USER" && role !== "ADMIN") {
                 res.status(400).json({
                     message: "Invalid role",
                 });
                 return;
             }
 
-            const user = await User.findByIdAndUpdate(
-                id,
-                { role },
-                { new: true }
-            );
-
-            if (!user) {
-                res.status(404).json({
-                    message: "User not found",
-                });
-                return;
-            }
+            const user = await prisma.user.update({
+                where: { id },
+                data: { role: role as Role }
+            });
 
             res.status(200).json({
                 message: "Role updated",
                 user,
             });
-        } catch {
+        } catch (error) {
             res.status(500).json({
                 message: "Failed to change role",
             });
@@ -457,7 +462,7 @@ class UserController {
         res: Response
     ): Promise<void> => {
         try {
-            const { channelName } = req.params;
+            const channelName = req.params.channelName as string;
 
             const user = await prisma.user.findFirst({
                 where: {

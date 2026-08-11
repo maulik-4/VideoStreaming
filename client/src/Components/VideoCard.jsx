@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 const VideoCard = ({ video, navigate }) => {
-    const { _id, thumbnail, title, category, user, views, videoLink, createdAt } = video;
+    const { id, thumbnail, title, category, user, views, videoLink, createdAt } = video;
     const [isHovering, setIsHovering] = useState(false);
     const videoRef = useRef(null);
     
@@ -40,7 +40,7 @@ const VideoCard = ({ video, navigate }) => {
   
     return (
       <div
-          onClick={() => navigate(`/watch/${_id}`, { state: { video } })}
+          onClick={() => navigate(`/watch/${ id}`, { state: { video } })}
           className="flex flex-col rounded-lg overflow-hidden transition-all duration-300 cursor-pointer glass-card hover:shadow-2xl hover:scale-[1.01]"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}

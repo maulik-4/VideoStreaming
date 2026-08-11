@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 
-import Video from "../Modals/video";
 import redisClient from "../Redis/redisClient";
 import { getIO } from "../Socket/socket";
 
@@ -137,7 +136,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
 
             const video = await prisma.video.findUnique({
                 where: {
@@ -200,7 +199,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
 
             const videos = await prisma.video.findMany({
                 where: {
@@ -242,7 +241,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
 
             const updatedVideo = await prisma.video.update({
                 where: {
@@ -281,7 +280,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
 
             const updatedVideo = await prisma.video.update({
                 where: {
@@ -321,7 +320,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
 
             const updatedVideo = await prisma.video.update({
                 where: {
@@ -361,7 +360,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
             const { text } = req.body;
 
             if (!text || !text.trim()) {
@@ -436,7 +435,8 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { videoId, commentId } = req.params;
+            const videoId = req.params.videoId as string;
+            const commentId = req.params.commentId as string;
             const { text } = req.body;
 
             if (!text || !text.trim()) {
@@ -470,7 +470,7 @@ class VideoController {
             }
 
             const isOwner = comment.userId === req.user.id;
-            const isAdmin = req.user.role === "admin";
+            const isAdmin = req.user.role === "ADMIN";
 
             if (!isOwner && !isAdmin) {
                 res.status(403).json({
@@ -531,7 +531,7 @@ class VideoController {
         res: Response
     ): Promise<void> => {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
             const {
                 title,
                 description,
@@ -556,7 +556,7 @@ class VideoController {
             }
 
             const isOwner = video.userId === req.user.id;
-            const isAdmin = req.user.role === "admin";
+            const isAdmin = req.user.role === "ADMIN";
 
             if (!isOwner && !isAdmin) {
                 res.status(403).json({

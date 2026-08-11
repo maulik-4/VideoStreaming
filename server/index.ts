@@ -21,7 +21,6 @@ import dotenv from "dotenv";
 import http, { Server as HttpServer } from "http";
 import { Server as SocketServer, Socket } from "socket.io";
 
-import "./Connection/conn";
 
 import authRoutes from "./Routes/user";
 import videoRoutes from "./Routes/video";
@@ -61,6 +60,8 @@ class Server {
                 ],
                 credentials: true,
             },
+            pingTimeout: 120000,
+            pingInterval: 30000,
         });
 
         setIO(this.io);

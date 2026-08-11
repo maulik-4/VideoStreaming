@@ -4,7 +4,8 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://yotube-full-stack.
 
 const socket = io(baseURL, {
     withCredentials: true,
-     autoConnect: true,
+    autoConnect: true,
+    transports: ["websocket"],
 });
 
 export default socket;

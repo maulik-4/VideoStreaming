@@ -49,9 +49,9 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        if (parsedUser?.profilePic || parsedUser?._id) {
+        if (parsedUser?.profilePic || parsedUser?.id) {
           setProfPic(parsedUser.profilePic);
-          setid(parsedUser._id);
+          setid(parsedUser.id);
         }
       } catch (error) {
         
@@ -252,7 +252,7 @@ const Navbar = ({ SideBar, SidbarHidden }) => {
                         try {
                           const parsed = JSON.parse(storedUser);
                           role = parsed.role;
-                          userId = userId || parsed._id;
+                          userId = userId || parsed.id;
                         } catch (e) {}
                       }
                       if (role === 'admin') {

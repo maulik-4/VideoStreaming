@@ -30,7 +30,7 @@ class RateLimiter {
                 let identifier: string;
 
                 if (keyBy === "user") {
-                    if (!req.user?._id) {
+                    if (!req.user?.id) {
                         res.status(401).json({
                             message:
                                 "Authentication required for this endpoint",
@@ -38,7 +38,7 @@ class RateLimiter {
                         return;
                     }
 
-                    identifier = req.user._id.toString();
+                    identifier = req.user.id.toString();
                 } else {
                     identifier =
                         req.ip ||

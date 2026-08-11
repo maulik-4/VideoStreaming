@@ -13,7 +13,7 @@ class AdminMiddleware {
             return;
         }
 
-        if (req.user.role !== "admin") {
+        if (req.user.role !== "ADMIN") {
             res.status(403).json({
                 message: "Admin access only",
             });

@@ -26,7 +26,7 @@ const Sidebar = ({SideBar}) => {
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        if (parsed?._id) setCurrentUserId(parsed._id);
+        if (parsed?.id) setCurrentUserId(parsed.id);
       } catch (e) {
         // ignore parse errors
       }
@@ -72,8 +72,8 @@ const Sidebar = ({SideBar}) => {
         )}
         {subs.slice(0, 8).map((ch) => (
           <SidebarItem
-            key={ch._id}
-            onClick={() => navigate(`/profile/${ch._id}`)}
+            key={ch.id}
+            onClick={() => navigate(`/profile/${ch.id}`)}
             icon={
               <div className="rounded-full w-8 h-8 overflow-hidden bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
                 {ch.profilePic ? (

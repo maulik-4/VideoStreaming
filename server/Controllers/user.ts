@@ -91,8 +91,15 @@ class UserController {
                 success: "yes",
                 data: newUser,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+
+            if (error.code === 'P2002') {
+                res.status(400).json({
+                    message: "User already exists",
+                });
+                return;
+            }
 
             res.status(500).json({
                 message: "Internal server error",

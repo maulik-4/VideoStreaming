@@ -181,8 +181,15 @@ class VideoController {
                 success: "yes",
                 data: video,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+
+            if (error.code === 'P2023') {
+                res.status(400).json({
+                    message: "Invalid video ID format",
+                });
+                return;
+            }
 
             if (!res.headersSent) {
                 res.status(500).json({

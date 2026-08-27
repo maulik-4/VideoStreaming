@@ -109,8 +109,9 @@ class Server {
             await prisma.$connect();
             console.log("PostgreSQL connected via Prisma");
         } catch (error) {
-            console.error("Failed to connect to PostgreSQL:", error);
-            process.exit(1);
+            console.error("Failed to connect to PostgreSQL on startup (it may be waking up from sleep):", error);
+            // We intentionally do NOT exit here. Prisma will automatically retry the connection 
+            // on the first actual database query. This is essential for serverless databases like Neon.
         }
     }
 

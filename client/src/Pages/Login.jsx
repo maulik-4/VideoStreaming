@@ -31,7 +31,8 @@ const Login = () => {
         // Store the device ID in localStorage
         localStorage.setItem("deviceId", deviceId);
         
-        axios.post("http://localhost:9999/auth/login", 
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://yotube-full-stack.onrender.com';
+        axios.post(`${baseURL}/auth/login`, 
             { ...user, deviceId }, 
             { withCredentials: true }
         )

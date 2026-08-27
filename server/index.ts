@@ -26,6 +26,7 @@ import authRoutes from "./Routes/user";
 import videoRoutes from "./Routes/video";
 import historyRoutes from "./Routes/history";
 import analysisRoutes from "./Routes/analysis";
+import { prisma } from "./Connection/Prisma";
 
 import { setIO } from "./Socket/socket";
 
@@ -103,11 +104,21 @@ class Server {
         this.app.use(cookieParser());
     }
 
-    private setupDatabase(): void {
-        // Connection is initialized through import.
+    private async setupDatabase(): Promise<void> {
+        try {
+            await prisma.$connect();
+            console.log("PostgreSQL connected via Prisma");
+        } catch (error) {
+            console.error("Failed to connect to PostgreSQL:", error);
+            process.exit(1);
+        }
     }
 
     private setupRoutes(): void {
+        this.app.get("/health", (req, res) => {
+            res.status(200).json({ status: "active", message: "Server is up and running" });
+        });
+        
         this.app.use("/auth", authRoutes);
         this.app.use("/api", videoRoutes);
         this.app.use("/history", historyRoutes);

@@ -1,13 +1,13 @@
 # YouTube Clone Backend
 
-This is the backend for a full-stack MERN application that mimics some of the core functionalities of YouTube. It's built with Node.js, Express, and MongoDB, and includes features like user authentication, video management, subscriptions, watch history, and even AI-powered user analytics.
+This is the backend for a full-stack PERN application that mimics some of the core functionalities of YouTube. It's built with Node.js, Express, and PostgreSQL, and includes features like user authentication, video management, subscriptions, watch history, and even AI-powered user analytics.
 
 ## Technologies Used
 
 - **Node.js**: JavaScript runtime for the server.
 - **Express.js**: Web framework for Node.js.
-- **MongoDB**: NoSQL database for storing user and video data.
-- **Mongoose**: ODM for MongoDB to model application data.
+- **PostgreSQL**: NoSQL database for storing user and video data.
+- **Prisma**: ODM for PostgreSQL to model application data.
 - **JWT (JSON Web Tokens)**: For secure user authentication and session management.
 - **bcrypt.js**: For hashing user passwords.
 - **Redis**: In-memory data store used for caching and rate limiting.
@@ -19,10 +19,10 @@ This is the backend for a full-stack MERN application that mimics some of the co
 
 The backend code is organized into the following directories:
 
-- `Connection/`: Handles the connection to the MongoDB database.
+- `Connection/`: Handles the connection to the PostgreSQL database.
 - `Controllers/`: Contains the business logic for handling requests.
 - `middlewares/`: Custom middleware for authentication, admin checks, and rate limiting.
-- `Modals/`: Mongoose schemas for Users, Videos, and History.
+- `Modals/`: Prisma schemas for Users, Videos, and History.
 - `Redis/`: Configuration for the Redis client.
 - `Routes/`: Defines the API endpoints.
 - `Services/`: Contains services for interacting with external APIs like Groq.
@@ -32,31 +32,24 @@ The backend code is organized into the following directories:
 
 ### 1. Database Connection
 
-The application connects to a MongoDB database using Mongoose. The connection logic is encapsulated in `Connection/conn.js`.
+The application connects to a PostgreSQL database using Prisma. The connection logic is encapsulated in `Connection/Prisma.ts`.
 
-```javascript
-// In Connection/conn.js
-class DatabaseConnection {
-  constructor() {
-    this.MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/Youtube-Backend';
-    this.isConnected = false;
-  }
+```typescript
+// In Connection/Prisma.ts
+import { PrismaClient } from "@prisma/client";
 
-  async connect() {
-    if (this.isConnected) {
-      return;
-    }
+const globalForPrisma = globalThis as {
+  prisma?: PrismaClient;
+};
 
-    try {
-      await mongoose.connect(this.MONGO_URL, { 
-        useNewUrlParser: true, 
-        useUnifiedTopology: true 
-      });
-      this.isConnected = true;
-    } catch (err) {
-      throw err;
-    }
-  }
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: ["error"],
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
 ```
 
@@ -167,7 +160,7 @@ async videoUpload(req, res) {
 
 #### Video Search
 
-The search functionality uses MongoDB's `$regex` operator to find videos matching a query in the title, description, or category. The results are cached in Redis to improve performance for repeated searches.
+The search functionality uses PostgreSQL's `$regex` operator to find videos matching a query in the title, description, or category. The results are cached in Redis to improve performance for repeated searches.
 
 ```javascript
 // In Controllers/video.js - searchVideos
@@ -232,7 +225,7 @@ const historyEntry = await History.findOneAndUpdate(
 
 ### 5. Caching with Redis
 
-Redis is used to cache data that is frequently accessed but doesn't change often, such as the list of all videos on the homepage or search results. This reduces the load on the MongoDB database and speeds up response times.
+Redis is used to cache data that is frequently accessed but doesn't change often, such as the list of all videos on the homepage or search results. This reduces the load on the PostgreSQL database and speeds up response times.
 
 ```javascript
 // In Controllers/video.js - getAllVideos
@@ -344,7 +337,7 @@ const getLLMAnalysis = async (prompt) => {
 3.  **Create a `.env` file** in the `server` directory with the following variables:
     ```
     PORT=9999
-    MONGO_URL=<your_mongodb_connection_string>
+    DATABASE_URL=<your_PostgreSQL_connection_string>
     SECRET_KEY=<your_jwt_secret>
     REDIS_URL=<your_redis_connection_string>
     GROQ_API_KEY=<your_groq_api_key>

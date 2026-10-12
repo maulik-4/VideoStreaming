@@ -31,7 +31,7 @@ const Subscriptions = ({ SideBar }) => {
           <div className="glass-card p-6 rounded">No videos from your subscriptions yet.</div>
         ) : (
           <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {videos.map(v => <VideoCard key={v._1d || v._id} video={v} navigate={navigate} />)}
+            {videos.map(v => <VideoCard key={v.id} video={v} navigate={navigate} />)}
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import llmService from "../Services/llmService";
-import History from "../Modals/history";
+import { prisma } from "../Connection/Prisma";
 
 export const getAnalysis = async (
     req: Request,
@@ -9,18 +9,19 @@ export const getAnalysis = async (
 ): Promise<void> => {
   
 
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
 
 
     try {
-        const historyData = await History.find({
-            user: userId,
-        })
-            .sort({
-                watchedAt: -1,
-            })
-            .limit(20)
-            .lean();
+        const historyData = await prisma.history.findMany({
+            where: {
+                userId: userId,
+            },
+            orderBy: {
+                watchedAt: "desc",
+            },
+            take: 20,
+        });
 
         if (historyData.length === 0) {
             res.status(200).json({

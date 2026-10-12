@@ -2,10 +2,8 @@ import { Request, Response } from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
-
-import User from "../Modals/user";
-import Video from "../Modals/video";
+import { Role } from "@prisma/client";
+import { prisma } from "../Connection/Prisma";
 
 dotenv.config();
 
@@ -39,240 +37,7 @@ class UserController {
                     : "lax",
         };
     }
-
-    public subscribe = async (
-        req: Request,
-        res: Response
-    ): Promise<void> => {
-        try {
-           const targetId = req.params.targetId as string;
-
-            const currentUser = req.user;
-
-            if (currentUser._id.equals(targetId)) {
-                res.status(400).json({
-                    message: "Cannot subscribe to yourself",
-                });
-                return;
-            }
-
-            const alreadySubscribed =
-                currentUser.subscriptions?.find(
-                    (id) => id.toString() === targetId
-                );
-
-            if (alreadySubscribed) {
-                res.status(400).json({
-                    message: "Already subscribed",
-                });
-                return;
-            }
-
-            currentUser.subscriptions =
-                currentUser.subscriptions || [];
-
-            currentUser.subscriptions.push(
-    new Types.ObjectId(targetId)
-);
-
-            await currentUser.save();
-
-            const targetUser = await User.findById(targetId);
-
-            if (targetUser) {
-                targetUser.subscribersCount++;
-
-                await targetUser.save();
-            }
-
-            res.status(200).json({
-                message: "Subscribed",
-            });
-        } catch {
-            res.status(500).json({
-                message: "Failed to subscribe",
-            });
-        }
-    };
-
-    public unsubscribe = async (
-        req: Request,
-        res: Response
-    ): Promise<void> => {
-        try {
-            const targetId = req.params.id;
-
-            const currentUser = req.user;
-
-            currentUser.subscriptions =
-                currentUser.subscriptions.filter(
-                    (id) => id.toString() !== targetId
-                );
-
-            await currentUser.save();
-
-            const targetUser = await User.findById(targetId);
-
-            if (targetUser) {
-                targetUser.subscribersCount = Math.max(
-                    0,
-                    targetUser.subscribersCount - 1
-                );
-
-                await targetUser.save();
-            }
-
-            res.status(200).json({
-                message: "Unsubscribed",
-            });
-        } catch {
-            res.status(500).json({
-                message: "Failed to unsubscribe",
-            });
-        }
-    };
-
-    public getSubscriptionsVideos = async (
-        req: Request,
-        res: Response
-    ): Promise<void> => {
-        try {
-            const subscriptions =
-                req.user.subscriptions || [];
-
-            const videos = await Video.find({
-                user: {
-                    $in: subscriptions,
-                },
-            }).populate(
-                "user",
-                "userName channelName profilePic"
-            );
-
-            res.status(200).json({
-                success: "yes",
-                data: videos,
-            });
-        } catch {
-            res.status(500).json({
-                message:
-                    "Failed to fetch subscriptions videos",
-            });
-        }
-    };
-
-    public getSubscriptionsList = async (
-        req: Request,
-        res: Response
-    ): Promise<void> => {
-        try {
-            const subscriptions =
-                req.user.subscriptions || [];
-
-            if (!subscriptions.length) {
-                res.status(200).json({
-                    success: "yes",
-                    data: [],
-                });
-                return;
-            }
-
-            const users = await User.find({
-                _id: {
-                    $in: subscriptions,
-                },
-            })
-                .select(
-                    "_id channelName userName profilePic subscribersCount"
-                )
-                .lean();
-
-            res.status(200).json({
-                success: "yes",
-                data: users,
-            });
-        } catch {
-            res.status(500).json({
-                message:
-                    "Failed to fetch subscriptions list",
-            });
-        }
-    };
-
-    public changeRole = async (
-        req: Request,
-        res: Response
-    ): Promise<void> => {
-        try {
-            const { id } = req.params;
-
-            const { role } = req.body;
-
-            if (
-                role !== "user" &&
-                role !== "admin"
-            ) {
-                res.status(400).json({
-                    message: "Invalid role",
-                });
-                return;
-            }
-
-            const user = await User.findByIdAndUpdate(
-                id,
-                { role },
-                { new: true }
-            );
-
-            if (!user) {
-                res.status(404).json({
-                    message: "User not found",
-                });
-                return;
-            }
-
-            res.status(200).json({
-                message: "Role updated",
-                user,
-            });
-        } catch {
-            res.status(500).json({
-                message: "Failed to change role",
-            });
-        }
-    };
-
-    public getByChannelName = async (
-        req: Request,
-        res: Response
-    ): Promise<void> => {
-        try {
-            const { channelName } = req.params;
-
-            const user = await User.findOne({
-                channelName,
-            }).select(
-                "_id channelName userName profilePic about"
-            );
-
-            if (!user) {
-                res.status(404).json({
-                    message: "Channel not found",
-                });
-                return;
-            }
-
-            res.status(200).json({
-                success: "yes",
-                data: user,
-            });
-        } catch {
-            res.status(500).json({
-                message: "Failed to fetch channel",
-            });
-        }
-    };
-        public userSignup = async (
+    public userSignup = async (
         req: Request,
         res: Response
     ): Promise<void> => {
@@ -285,8 +50,10 @@ class UserController {
                 profilePic,
             } = req.body;
 
-            const userExists = await User.findOne({
-                userName,
+            const userExists = await prisma.user.findUnique({
+                where: {
+                    userName,
+                },
             });
 
             if (userExists) {
@@ -296,35 +63,49 @@ class UserController {
                 return;
             }
 
-            const hashedPassword = await bcrypt.hash(
-                password,
-                10
-            );
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-            const newUser = new User({
-                channelName,
-                userName,
-                password: hashedPassword,
-                about,
-                profilePic,
-                role: "user",
-                isBlocked: false,
+            const newUser = await prisma.user.create({
+                data: {
+                    channelName,
+                    userName,
+                    password: hashedPassword,
+                    about,
+                    profilePic,
+                },
+                select: {
+                    id: true,
+                    channelName: true,
+                    userName: true,
+                    about: true,
+                    profilePic: true,
+                    role: true,
+                    isBlocked: true,
+                    subscribersCount: true,
+                    createdAt: true,
+                },
             });
-
-            await newUser.save();
 
             res.status(201).json({
                 message: "User created successfully",
                 success: "yes",
                 data: newUser,
             });
-        } catch {
+        } catch (error: any) {
+            console.error(error);
+
+            if (error.code === 'P2002') {
+                res.status(400).json({
+                    message: "User already exists",
+                });
+                return;
+            }
+
             res.status(500).json({
                 message: "Internal server error",
             });
         }
     };
-
     public userSignin = async (
         req: Request,
         res: Response
@@ -335,10 +116,21 @@ class UserController {
                 password,
                 deviceId,
             } = req.body;
-            const userExist = await User.findOne({
-                userName,
+
+            const userExist = await prisma.user.findUnique({
+                where: {
+                    userName,
+                },
+                select: {
+                    id: true,
+                    userName: true,
+                    channelName: true,
+                    about: true,
+                    profilePic: true,
+                    role: true,
+                    password: true,
+                },
             });
-           
 
             if (!userExist) {
                 res.status(404).json({
@@ -361,7 +153,7 @@ class UserController {
 
             const token = jwt.sign(
                 {
-                    userId: userExist._id,
+                    userId: userExist.id,
                     deviceId,
                 },
                 this.SECRET_KEY,
@@ -376,7 +168,7 @@ class UserController {
             });
 
             const cleanUser = {
-                _id: userExist._id,
+                id: userExist.id,
                 userName: userExist.userName,
                 channelName: userExist.channelName,
                 about: userExist.about,
@@ -391,13 +183,14 @@ class UserController {
                 token,
                 user: cleanUser,
             });
-        } catch {
+        } catch (error) {
+            console.error(error);
+
             res.status(500).json({
                 message: "Internal server error",
             });
         }
     };
-
     public userLogout = async (
         req: Request,
         res: Response
@@ -414,70 +207,329 @@ class UserController {
         res: Response
     ): Promise<void> => {
         try {
-            const user = await User.findByIdAndUpdate(
-                req.params.id,
-                {
+            const user = await prisma.user.update({
+                where: {
+                    id: req.params.id as string,
+                },
+                data: {
                     isBlocked: true,
-                }
-            );
-
-            if (!user) {
-                res.status(404).json({
-                    message: "User not found",
-                });
-                return;
-            }
+                },
+            });
 
             res.status(200).json({
                 message: "User blocked",
+                data: user,
             });
-        } catch {
-            res.status(500).json({
-                message: "Error blocking user",
+        } catch (error) {
+            console.error(error);
+
+            res.status(404).json({
+                message: "User not found",
             });
         }
     };
-
     public unblockUser = async (
         req: Request,
         res: Response
     ): Promise<void> => {
         try {
-            const user = await User.findByIdAndUpdate(
-                req.params.id,
-                {
+            const user = await prisma.user.update({
+                where: {
+                    id: req.params.id as string,
+                },
+                data: {
                     isBlocked: false,
+                },
+            });
+
+            res.status(200).json({
+                message: "User unblocked",
+                data: user,
+            });
+        } catch (error) {
+            console.error(error);
+
+            res.status(404).json({
+                message: "User not found",
+            });
+        }
+    };
+    public subscribe = async (
+        req: Request,
+        res: Response
+    ): Promise<void> => {
+        try {
+            const targetId = req.params.targetId as string;
+
+            const currentUser = req.user;
+
+            if (currentUser.id === targetId) {
+                res.status(400).json({
+                    message: "Cannot subscribe to yourself",
+                });
+                return;
+            }
+
+            const dbUser = await prisma.user.findUnique({
+                where: { id: currentUser.id },
+                include: { subscriptions: true }
+            });
+
+            const alreadySubscribed = dbUser?.subscriptions.some(sub => sub.id === targetId);
+
+            if (alreadySubscribed) {
+                res.status(400).json({
+                    message: "Already subscribed",
+                });
+                return;
+            }
+
+            await prisma.user.update({
+                where: { id: currentUser.id },
+                data: {
+                    subscriptions: {
+                        connect: { id: targetId }
+                    }
                 }
-            );
+            });
+
+            await prisma.user.update({
+                where: { id: targetId },
+                data: {
+                    subscribersCount: { increment: 1 }
+                }
+            });
+
+            res.status(200).json({
+                message: "Subscribed",
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: "Failed to subscribe",
+            });
+        }
+    };
+
+    public unsubscribe = async (
+        req: Request,
+        res: Response
+    ): Promise<void> => {
+        try {
+            const targetId = req.params.id as string;
+            const currentUser = req.user;
+
+            await prisma.user.update({
+                where: { id: currentUser.id },
+                data: {
+                    subscriptions: {
+                        disconnect: { id: targetId }
+                    }
+                }
+            });
+
+            const targetUser = await prisma.user.findUnique({ where: { id: targetId } });
+
+            if (targetUser && targetUser.subscribersCount > 0) {
+                await prisma.user.update({
+                    where: { id: targetId },
+                    data: {
+                        subscribersCount: { decrement: 1 }
+                    }
+                });
+            }
+
+            res.status(200).json({
+                message: "Unsubscribed",
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: "Failed to unsubscribe",
+            });
+        }
+    };
+
+    public getSubscriptionsVideos = async (
+        req: Request,
+        res: Response
+    ): Promise<void> => {
+        try {
+            const dbUser = await prisma.user.findUnique({
+                where: { id: req.user.id },
+                include: { subscriptions: true }
+            });
+
+            const subscriptionIds = dbUser?.subscriptions.map(sub => sub.id) || [];
+
+            const videos = await prisma.video.findMany({
+                where: {
+                    userId: { in: subscriptionIds }
+                },
+                include: {
+                    user: {
+                        select: {
+                            userName: true,
+                            channelName: true,
+                            profilePic: true
+                        }
+                    }
+                }
+            });
+
+            res.status(200).json({
+                success: "yes",
+                data: videos,
+            });
+        } catch (error) {
+            res.status(500).json({
+                message:
+                    "Failed to fetch subscriptions videos",
+            });
+        }
+    };
+
+    public getSubscriptionsList = async (
+        req: Request,
+        res: Response
+    ): Promise<void> => {
+        try {
+            const dbUser = await prisma.user.findUnique({
+                where: { id: req.user.id },
+                include: { subscriptions: true }
+            });
+
+            const subscriptions = dbUser?.subscriptions || [];
+
+            if (!subscriptions.length) {
+                res.status(200).json({
+                    success: "yes",
+                    data: [],
+                });
+                return;
+            }
+
+            const users = await prisma.user.findMany({
+                where: {
+                    id: { in: subscriptions.map(sub => sub.id) }
+                },
+                select: {
+                    id: true,
+                    channelName: true,
+                    userName: true,
+                    profilePic: true,
+                    subscribersCount: true
+                }
+            });
+
+            res.status(200).json({
+                success: "yes",
+                data: users,
+            });
+        } catch (error) {
+            res.status(500).json({
+                message:
+                    "Failed to fetch subscriptions list",
+            });
+        }
+    };
+
+    public changeRole = async (
+        req: Request,
+        res: Response
+    ): Promise<void> => {
+        try {
+            const id = req.params.id as string;
+
+            const { role } = req.body;
+
+            if (role !== "USER" && role !== "ADMIN") {
+                res.status(400).json({
+                    message: "Invalid role",
+                });
+                return;
+            }
+
+            const user = await prisma.user.update({
+                where: { id },
+                data: { role: role as Role }
+            });
+
+            res.status(200).json({
+                message: "Role updated",
+                user,
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: "Failed to change role",
+            });
+        }
+    };
+
+    public getByChannelName = async (
+        req: Request,
+        res: Response
+    ): Promise<void> => {
+        try {
+            const channelName = req.params.channelName as string;
+
+            const user = await prisma.user.findFirst({
+                where: {
+                    channelName,
+                },
+                select: {
+                    id: true,
+                    channelName: true,
+                    userName: true,
+                    profilePic: true,
+                    about: true,
+                },
+            });
 
             if (!user) {
                 res.status(404).json({
-                    message: "User not found",
+                    message: "Channel not found",
                 });
                 return;
             }
 
             res.status(200).json({
-                message: "User unblocked",
+                success: "yes",
+                data: user,
             });
-        } catch {
+        } catch (error) {
+            console.error(error);
+
             res.status(500).json({
-                message: "Error unblocking user",
+                message: "Failed to fetch channel",
             });
         }
     };
+
 
     public getAllUsers = async (
         req: Request,
         res: Response
     ): Promise<void> => {
         try {
-            const users = await User.find({});
+            const users = await prisma.user.findMany({
+                select: {
+                    id: true,
+                    channelName: true,
+                    userName: true,
+                    about: true,
+                    profilePic: true,
+                    role: true,
+                    isBlocked: true,
+                    subscribersCount: true,
+                    createdAt: true,
+                },
+            });
 
             res.status(200).json({
                 users,
             });
-        } catch {
+        } catch (error) {
+            console.error(error);
+
             res.status(500).json({
                 message: "Error fetching users",
             });

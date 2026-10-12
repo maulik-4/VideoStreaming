@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-import User from "../Modals/user";
+import { prisma } from "../Connection/Prisma";
 interface TokenPayload extends JwtPayload {
     userId: string;
     deviceId?: string;
@@ -46,7 +46,7 @@ class AuthMiddleware {
                 this.SECRET_KEY
             ) as TokenPayload;
 
-            const user = await User.findById(decoded.userId);
+            const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
 
             if (!user) {
                 res.status(401).json({

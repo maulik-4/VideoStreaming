@@ -93,14 +93,14 @@ function Admin() {
         <tbody className="divide-y" style={{borderColor:'rgba(255,255,255,0.04)'}}>
           {users.map((user) => (
             <tr
-              key={user._id}
+              key={user.id}
               className="transition duration-200 ease-in-out hover:translate-x-0.5"
             >
               <td className="px-6 py-4 text-main">{user.userName}</td>
               <td className="px-6 py-4 text-muted">
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); navigate(`/profile/${user._id}`); }}
+                  onClick={(e) => { e.preventDefault(); navigate(`/profile/${user.id}`); }}
                   className="text-blue-300 hover:underline"
                 >
                   {user.channelName}
@@ -121,7 +121,7 @@ function Admin() {
               <td className="px-6 py-4">
                 <select
                   value={user.role}
-                  onChange={(e) => changeRole(user._id, e.target.value)}
+                  onChange={(e) => changeRole(user.id, e.target.value)}
                   className="input-card p-2 rounded"
                 >
                   <option value="user">user</option>
@@ -133,7 +133,7 @@ function Admin() {
                   user.isBlocked ? (
                     <button
                       type="button"
-                      onClick={(e) => { e.preventDefault(); unblockUser(user._id); }}
+                      onClick={(e) => { e.preventDefault(); unblockUser(user.id); }}
                       className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-md transition duration-200"
                     >
                       Unblock
@@ -141,7 +141,7 @@ function Admin() {
                   ) : (
                     <button
                       type="button"
-                      onClick={(e) => { e.preventDefault(); blockUser(user._id); }}
+                      onClick={(e) => { e.preventDefault(); blockUser(user.id); }}
                       className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md transition duration-200"
                     >
                       Block

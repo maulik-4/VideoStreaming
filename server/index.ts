@@ -21,12 +21,12 @@ import dotenv from "dotenv";
 import http, { Server as HttpServer } from "http";
 import { Server as SocketServer, Socket } from "socket.io";
 
-import "./Connection/conn";
 
 import authRoutes from "./Routes/user";
 import videoRoutes from "./Routes/video";
 import historyRoutes from "./Routes/history";
 import analysisRoutes from "./Routes/analysis";
+import { prisma } from "./Connection/Prisma";
 
 import { setIO } from "./Socket/socket";
 
@@ -61,6 +61,8 @@ class Server {
                 ],
                 credentials: true,
             },
+            pingTimeout: 120000,
+            pingInterval: 30000,
         });
 
         setIO(this.io);
@@ -102,11 +104,22 @@ class Server {
         this.app.use(cookieParser());
     }
 
-    private setupDatabase(): void {
-        // Connection is initialized through import.
+    private async setupDatabase(): Promise<void> {
+        try {
+            await prisma.$connect();
+            console.log("PostgreSQL connected via Prisma");
+        } catch (error) {
+            console.error("Failed to connect to PostgreSQL on startup (it may be waking up from sleep):", error);
+            // We intentionally do NOT exit here. Prisma will automatically retry the connection 
+            // on the first actual database query. This is essential for serverless databases like Neon.
+        }
     }
 
     private setupRoutes(): void {
+        this.app.get("/health", (req, res) => {
+            res.status(200).json({ status: "active", message: "Server is up and running" });
+        });
+        
         this.app.use("/auth", authRoutes);
         this.app.use("/api", videoRoutes);
         this.app.use("/history", historyRoutes);
